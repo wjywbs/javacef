@@ -331,7 +331,7 @@ ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
 endif
 
 quiet_cmd_regen_makefile = ACTION Regenerating $@
-cmd_regen_makefile = ./build/gyp_chromium -fmake --ignore-environment "--toplevel-dir=/home/wei/down/chrome/chromium/src" -I/home/wei/down/chrome/chromium/src/build/common.gypi "--depth=/home/wei/down/chrome/chromium/src" javacef/chromium_loader.gyp
+cmd_regen_makefile = ./build/gyp_chromium -fmake --ignore-environment "--toplevel-dir=." -I/home/wei/down/chrome/chromium/src/build/common.gypi "--depth=." javacef/chromium_loader.gyp
 Makefile: javacef/cef_paths.gypi javacef/chromium_loader.gyp build/filename_rules.gypi build/internal/release_impl_official.gypi build/internal/release_defaults.gypi build/release.gypi build/common.gypi build/internal/release_impl.gypi javacef/cef_paths2.gypi
 	$(call do_cmd,regen_makefile)
 
