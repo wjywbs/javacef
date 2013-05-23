@@ -1,0 +1,1 @@
+java -cp "java_resources/swt.jar:javabin/" org.embedded.browser.SampleWindow
