@@ -237,6 +237,7 @@ public class Chromium extends Canvas {
 	}
 	
 	static {
+		System.loadLibrary("libcef");
 		System.loadLibrary("chromium_loader_win");
 //		System.load("path\\to\\chromium_loader_win.dll");
 	}
