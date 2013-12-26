@@ -17,7 +17,6 @@
 #include "../include/cef_web_urlrequest.h"
 #include "cefclient_switches.h"
 #include "client_handler.h"
-#include "string_util.h"
 #include "util.h"
 #include "cookie_handler.h"
 
