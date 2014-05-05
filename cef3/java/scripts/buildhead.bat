@@ -1,0 +1,2 @@
+"%JAVA_HOME%\bin\javah" -classpath ..\lib\win\swt.jar;..\bin -d ..\bin org.embedded.browser.Chromium
+"%JAVA_HOME%\bin\javah" -classpath ..\lib\win\swt.jar;..\bin -d ..\bin org.embedded.browser.DownloadWindow
