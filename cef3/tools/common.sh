@@ -8,14 +8,14 @@ checkJavaHomeMac() {
     echo "Error: JAVA_HOME is not set."
     echo
     echo "For example:"
-    if [ "$1" -eq 64 ]; then
+    if [ "$PLATFORM" == "mac64" ]; then
       echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_45.jdk/Contents/Home"
     else
       echo "export JAVA_HOME=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home"
     fi
     echo
     echo "Suggested path:"
-    if [ "$1" -eq 64 ]; then
+    if [ "$PLATFORM" == "mac64" ]; then
       echo `/usr/libexec/java_home -Fa x86_64`
     else
       echo `/usr/libexec/java_home -Fa i386`
@@ -33,7 +33,7 @@ checkJavaIncludeMac() {
 
       local INFO="option is to install Oracle JDK or OpenJDK, and set JAVA_INCLUDE_PATH to /path/to/jdk/include. The Java sources will still be compiled with the tools in JAVA_HOME."
 
-      if [ "$1" -eq 64 ]; then
+      if [ "$PLATFORM" == "mac64" ]; then
         echo "If you are using Oracle JDK or OpenJDK, the \"include\" folder is not found in"
         echo "$JAVA_HOME. Did you set JAVA_HOME correctly?"
         echo
