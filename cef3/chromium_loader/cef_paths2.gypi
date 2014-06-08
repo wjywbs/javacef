@@ -217,6 +217,8 @@
     ],
     'chromium_loader_sources_mac': [
       'chromium_loader/chromium_loader_mac.mm',
+      'chromium_loader/signal_restore_posix.h',
+      'chromium_loader/signal_restore_posix.cpp',
     ],
     'chromium_loader_sources_linux': [
       'chromium_loader/chromium_loader_linux.cpp',

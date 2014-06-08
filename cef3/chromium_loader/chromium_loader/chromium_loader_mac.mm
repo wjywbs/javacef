@@ -20,6 +20,7 @@
 #include "cefclient/client_handler.h"
 #include "cefclient/client_switches.h"
 #include "cefclient/cookie_handler.h"
+#include "chromium_loader/signal_restore_posix.h"
 
 namespace {
 
@@ -113,8 +114,12 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
   CefString(&settings.resources_dir_path) = path.ToString() + "/cef_runtime/mac64/cefclient.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources";
 #endif
 
+  BackupSignalHandlers();
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
+
+  RestoreSignalHandlers();
 
   NSView* view = (NSView*)hwnd;
   NSThread* thread = [NSThread currentThread];
