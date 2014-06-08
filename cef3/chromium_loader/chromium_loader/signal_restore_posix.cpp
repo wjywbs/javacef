@@ -5,6 +5,8 @@
 #include "chromium_loader/signal_restore_posix.h"
 
 #include <signal.h>
+#include <stdio.h>
+#include <string.h>
 #include <map>
 
 // arraysize borrowed from base/macros.h

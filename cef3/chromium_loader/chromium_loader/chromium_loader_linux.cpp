@@ -14,6 +14,7 @@
 #include "cefclient/cefclient.h"
 #include "cefclient/client_handler.h"
 #include "cefclient/cookie_handler.h"
+#include "chromium_loader/signal_restore_posix.h"
 
 namespace {
 
@@ -66,8 +67,12 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
   CefString(&settings.locales_dir_path) = path.ToString() + "/cef_runtime/linux64/locales";
 #endif
 
+  BackupSignalHandlers();
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
+
+  RestoreSignalHandlers();
 
   GtkWidget* canvas = (GtkWidget*)hwnd;
   GtkWidget* vbox = gtk_vbox_new(FALSE, 0);
