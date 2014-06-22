@@ -54,7 +54,7 @@ if [ "$PLATFORM" == "mac32" ]; then
   checkJavaRuntime32Mac
   checkJarExist
 
-  export DYLD_LIBRARY_PATH="$APP_PATH/Contents/Frameworks/Chromium Embedded Framework.framework/Libraries"
+  export DYLD_LIBRARY_PATH="$APP_PATH/Contents/Frameworks/Chromium Embedded Framework.framework"
   export JAVACEF_PATH="$PROJECT_DIR"
 
   "$JAVA_HOME$JAVA_BIN" -d32 -XstartOnFirstThread \
