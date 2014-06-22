@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -207,7 +207,7 @@ void CEF_CALLBACK render_handler_on_popup_size(
 }
 
 void CEF_CALLBACK render_handler_on_paint(struct _cef_render_handler_t* self,
-    cef_browser_t* browser, enum cef_paint_element_type_t type,
+    cef_browser_t* browser, cef_paint_element_type_t type,
     size_t dirtyRectsCount, cef_rect_t const* dirtyRects, const void* buffer,
     int width, int height) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

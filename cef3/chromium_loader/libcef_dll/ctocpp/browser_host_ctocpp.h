@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -40,11 +40,12 @@ class CefBrowserHostCToCpp
   virtual CefRefPtr<CefBrowser> GetBrowser() OVERRIDE;
   virtual void ParentWindowWillClose() OVERRIDE;
   virtual void CloseBrowser(bool force_close) OVERRIDE;
-  virtual void SetFocus(bool enable) OVERRIDE;
+  virtual void SetFocus(bool focus) OVERRIDE;
+  virtual void SetWindowVisibility(bool visible) OVERRIDE;
   virtual CefWindowHandle GetWindowHandle() OVERRIDE;
   virtual CefWindowHandle GetOpenerWindowHandle() OVERRIDE;
   virtual CefRefPtr<CefClient> GetClient() OVERRIDE;
-  virtual CefString GetDevToolsURL(bool http_scheme) OVERRIDE;
+  virtual CefRefPtr<CefRequestContext> GetRequestContext() OVERRIDE;
   virtual double GetZoomLevel() OVERRIDE;
   virtual void SetZoomLevel(double zoomLevel) OVERRIDE;
   virtual void RunFileDialog(FileDialogMode mode, const CefString& title,
@@ -52,6 +53,14 @@ class CefBrowserHostCToCpp
       const std::vector<CefString>& accept_types,
       CefRefPtr<CefRunFileDialogCallback> callback) OVERRIDE;
   virtual void StartDownload(const CefString& url) OVERRIDE;
+  virtual void Print() OVERRIDE;
+  virtual void Find(int identifier, const CefString& searchText, bool forward,
+      bool matchCase, bool findNext) OVERRIDE;
+  virtual void StopFinding(bool clearSelection) OVERRIDE;
+  virtual void ShowDevTools(const CefWindowInfo& windowInfo,
+      CefRefPtr<CefClient> client,
+      const CefBrowserSettings& settings) OVERRIDE;
+  virtual void CloseDevTools() OVERRIDE;
   virtual void SetMouseCursorChangeDisabled(bool disabled) OVERRIDE;
   virtual bool IsMouseCursorChangeDisabled() OVERRIDE;
   virtual bool IsWindowRenderingDisabled() OVERRIDE;

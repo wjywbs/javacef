@@ -46,14 +46,15 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,1547,1412,0
- PRODUCTVERSION 3,1547,1412,0
+ FILEVERSION 3,1750,1738,0
+ PRODUCTVERSION 3,1750,1738,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,11 +70,11 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "FileDescription", "chromium_loader"
-            VALUE "FileVersion", "3.1547.1412"
+            VALUE "FileVersion", "3.1750.1738"
             VALUE "InternalName", "chromium_loader.dll"
             VALUE "OriginalFilename", "chromium_loader.dll"
             VALUE "ProductName", "chromium_loader"
-            VALUE "ProductVersion", "3.1547.1412"
+            VALUE "ProductVersion", "3.1750.1738"
         END
     END
     BLOCK "VarFileInfo"

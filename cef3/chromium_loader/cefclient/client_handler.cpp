@@ -34,6 +34,7 @@ namespace {
 // Custom menu command Ids.
 enum client_menu_ids {
   CLIENT_ID_SHOW_DEVTOOLS   = MENU_ID_USER_FIRST,
+  CLIENT_ID_CLOSE_DEVTOOLS,
   CLIENT_ID_TESTMENU_SUBMENU,
   CLIENT_ID_TESTMENU_CHECKITEM,
   CLIENT_ID_TESTMENU_RADIOITEM1,
@@ -98,8 +99,6 @@ ClientHandler::ClientHandler()
     m_StopHwnd(NULL),
     m_ReloadHwnd(NULL),
     m_bFocusOnEditableField(false) {
-  CreateProcessMessageDelegates(process_message_delegates_);
-
   // Read command line settings.
   CefRefPtr<CefCommandLine> command_line =
       CefCommandLine::GetGlobalCommandLine();
@@ -108,12 +107,6 @@ ClientHandler::ClientHandler()
     m_StartupURL = command_line->GetSwitchValue(cefclient::kUrl);
   if (m_StartupURL.empty())
     m_StartupURL = "http://www.google.com/";
-
-  // Also use external dev tools if off-screen rendering is enabled since we
-  // disallow popup windows.
-  m_bExternalDevTools =
-      command_line->HasSwitch(cefclient::kExternalDevTools) ||
-      AppIsOffScreenRenderingEnabled();
 
   m_bMouseCursorChangeDisabled =
       command_line->HasSwitch(cefclient::kMouseCursorChangeDisabled);
@@ -126,6 +119,11 @@ bool ClientHandler::OnProcessMessageReceived(
     CefRefPtr<CefBrowser> browser,
     CefProcessId source_process,
     CefRefPtr<CefProcessMessage> message) {
+  if (message_router_->OnProcessMessageReceived(browser, source_process,
+                                                message)) {
+    return true;
+  }
+
   // Check for messages from the client renderer.
   std::string message_name = message->GetName();
   if (message_name == client_renderer::kFocusedNodeChangedMessage) {
@@ -137,16 +135,7 @@ bool ClientHandler::OnProcessMessageReceived(
     return true;
   }
 
-  bool handled = false;
-
-  // Execute delegate callbacks.
-  ProcessMessageDelegateSet::iterator it = process_message_delegates_.begin();
-  for (; it != process_message_delegates_.end() && !handled; ++it) {
-    handled = (*it)->OnProcessMessageReceived(this, browser, source_process,
-                                              message);
-  }
-
-  return handled;
+  return false;
 }
 
 void ClientHandler::OnBeforeContextMenu(
@@ -159,16 +148,9 @@ void ClientHandler::OnBeforeContextMenu(
     if (model->GetCount() > 0)
       model->AddSeparator();
 
-    // Add a "Show DevTools" item to all context menus.
+    // Add DevTools items to all context menus.
     model->AddItem(CLIENT_ID_SHOW_DEVTOOLS, "&Show DevTools");
-
-    CefString devtools_url = browser->GetHost()->GetDevToolsURL(true);
-    if (devtools_url.empty() ||
-        m_OpenDevToolsURLs.find(devtools_url) != m_OpenDevToolsURLs.end()) {
-      // Disable the menu option if DevTools isn't enabled or if a window is
-      // already open for the current URL.
-      model->SetEnabled(CLIENT_ID_SHOW_DEVTOOLS, false);
-    }
+    model->AddItem(CLIENT_ID_CLOSE_DEVTOOLS, "Close DevTools");
 
     // Test context menu features.
     BuildTestMenu(model);
@@ -185,20 +167,11 @@ bool ClientHandler::OnContextMenuCommand(
     case CLIENT_ID_SHOW_DEVTOOLS:
       ShowDevTools(browser);
       return true;
+    case CLIENT_ID_CLOSE_DEVTOOLS:
+      CloseDevTools(browser);
+      return true;
     default:  // Allow default handling, if any.
       return ExecuteTestMenu(command_id);
-  }
-}
-
-void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
-                                         bool isLoading,
-                                         bool canGoBack,
-                                         bool canGoForward) {
-  REQUIRE_UI_THREAD();
-
-  if (id != -1) {
-    SetLoading(isLoading);
-    send_navstate(id, canGoBack, canGoForward);
   }
 }
 
@@ -308,6 +281,18 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
 void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
+  if (!message_router_) {
+    // Create the browser-side router for query handling.
+    CefMessageRouterConfig config;
+    message_router_ = CefMessageRouterBrowserSide::Create(config);
+
+    // Register handlers with the router.
+    CreateMessageHandlers(message_handler_set_);
+    MessageHandlerSet::const_iterator it = message_handler_set_.begin();
+    for (; it != message_handler_set_.end(); ++it)
+      message_router_->AddHandler(*(it), false);
+  }
+
   // Disable mouse cursor change if requested via the command-line flag.
   if (m_bMouseCursorChangeDisabled)
     browser->GetHost()->SetMouseCursorChangeDisabled(true);
@@ -320,6 +305,9 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   } else if (browser->IsPopup()) {
     // Add to the list of popup browsers.
     m_PopupBrowsers.push_back(browser);
+
+    // Give focus to the popup browser.
+    browser->GetHost()->SetFocus(true);
   }
 
   m_BrowserCount++;
@@ -358,6 +346,8 @@ bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
+  message_router_->OnBeforeClose(browser);
+
   if (m_BrowserId == browser->GetIdentifier()) {
     // Free the browser pointer so that the browser can be destroyed
     m_Browser = NULL;
@@ -367,12 +357,6 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
       m_OSRHandler = NULL;
     }
   } else if (browser->IsPopup()) {
-    // Remove the record for DevTools popup windows.
-    std::set<std::string>::iterator it =
-        m_OpenDevToolsURLs.find(browser->GetMainFrame()->GetURL());
-    if (it != m_OpenDevToolsURLs.end())
-      m_OpenDevToolsURLs.erase(it);
-
     // Remove from the browser popup list.
     BrowserList::iterator bit = m_PopupBrowsers.begin();
     for (; bit != m_PopupBrowsers.end(); ++bit) {
@@ -384,8 +368,30 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
 
   if (--m_BrowserCount == 0) {
-    // All browser windows have closed. Quit the application message loop.
+    // All browser windows have closed.
+    // Remove and delete message router handlers.
+    MessageHandlerSet::const_iterator it = message_handler_set_.begin();
+    for (; it != message_handler_set_.end(); ++it) {
+      message_router_->RemoveHandler(*(it));
+      delete *(it);
+    }
+    message_handler_set_.clear();
+    message_router_ = NULL;
+
+    // Quit the application message loop.
     AppQuitMessageLoop();
+  }
+}
+
+void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
+                                         bool isLoading,
+                                         bool canGoBack,
+                                         bool canGoForward) {
+  REQUIRE_UI_THREAD();
+
+  if (id != -1) {
+    SetLoading(isLoading);
+    send_navstate(id, canGoBack, canGoForward);
   }
 }
 
@@ -395,7 +401,7 @@ void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
 
   if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
     // We've just started loading a page
-    SetLoading(true);
+    //SetLoading(true);
   }
 }
 
@@ -406,7 +412,7 @@ void ClientHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
 
   if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
     // We've just finished loading a page
-    SetLoading(false);
+    //SetLoading(false);
 
     // Disable the right mouse button if it's set in settings.
     if (!csettings.allow_right_button)
@@ -437,53 +443,25 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
 
   // Display a load error message.
   std::stringstream ss;
-  ss << "<html><body><h2>Failed to load URL " << std::string(failedUrl) <<
+  ss << "<html><body bgcolor=\"white\">"
+        "<h2>Failed to load URL " << std::string(failedUrl) <<
         " with error " << std::string(errorText) << " (" << errorCode <<
         ").</h2></body></html>";
   frame->LoadString(ss.str(), failedUrl);
 }
 
-void ClientHandler::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
-                                              TerminationStatus status) {
-  // Load the startup URL if that's not the website that we terminated on.
-  CefRefPtr<CefFrame> frame = browser->GetMainFrame();
-  std::string url = frame->GetURL();
-  std::transform(url.begin(), url.end(), url.begin(), tolower);
-
-  std::string startupURL = GetStartupURL();
-  if (url.find(startupURL) != 0)
-    frame->LoadURL(startupURL);
-}
-
-bool ClientHandler::OnBeforeResourceLoad(CefRefPtr<CefBrowser> browser,
-                                         CefRefPtr<CefFrame> frame,
-                                         CefRefPtr<CefRequest> request) {
-  REQUIRE_IO_THREAD();
-
-  if (csettings.cookies.size() == 0)
-    return false;
-
-  CefRefPtr<CefCookieManager> cookieManager =
-      CefCookieManager::GetGlobalManager();
-
-  std::map<std::string, std::string>::iterator cookie_it;
-  for (cookie_it = csettings.cookies.begin(); 
-       cookie_it != csettings.cookies.end();
-       cookie_it++)
-  {
-    CefCookie cookie;
-    CefString(&cookie.name).FromString(cookie_it->first);
-    CefString(&cookie.value).FromString(cookie_it->second);
-    cookieManager->SetCookie(request->GetURL(), cookie);
-  }
-
+bool ClientHandler::OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
+                                   CefRefPtr<CefFrame> frame,
+                                   CefRefPtr<CefRequest> request,
+                                   bool is_redirect) {
+  message_router_->OnBeforeBrowse(browser, frame);
   return false;
 }
 
 CefRefPtr<CefResourceHandler> ClientHandler::GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) {
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefRequest> request) {
 /*
   std::string url = request->GetURL();
   if (url.find(kTestOrigin) == 0) {
@@ -494,12 +472,14 @@ CefRefPtr<CefResourceHandler> ClientHandler::GetResourceHandler(
         // Show the request contents.
         std::string dump;
         DumpRequestContents(request, dump);
+        std::string str = "<html><body bgcolor=\"white\"><pre>" + dump +
+                          "</pre></body></html>";
         CefRefPtr<CefStreamReader> stream =
             CefStreamReader::CreateForData(
-                static_cast<void*>(const_cast<char*>(dump.c_str())),
-                dump.size());
+                static_cast<void*>(const_cast<char*>(str.c_str())),
+                str.size());
         ASSERT(stream.get());
-        return new CefStreamResourceHandler("text/plain", stream);
+        return new CefStreamResourceHandler("text/html", stream);
       } else {
         // Load the resource from file.
         CefRefPtr<CefStreamReader> stream =
@@ -533,6 +513,47 @@ void ClientHandler::OnProtocolExecution(CefRefPtr<CefBrowser> browser,
   // Allow OS execution of Spotify URIs.
   if (urlStr.find("spotify:") == 0)
     allow_os_execution = true;
+}
+
+void ClientHandler::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
+                                              TerminationStatus status) {
+  message_router_->OnRenderProcessTerminated(browser);
+
+  // Load the startup URL if that's not the website that we terminated on.
+  CefRefPtr<CefFrame> frame = browser->GetMainFrame();
+  std::string url = frame->GetURL();
+  std::transform(url.begin(), url.end(), url.begin(), tolower);
+
+  std::string startupURL = GetStartupURL();
+  if (startupURL != "chrome://crash" && !url.empty() &&
+      url.find(startupURL) != 0) {
+    frame->LoadURL(startupURL);
+  }
+}
+
+bool ClientHandler::OnBeforeResourceLoad(CefRefPtr<CefBrowser> browser,
+                                         CefRefPtr<CefFrame> frame,
+                                         CefRefPtr<CefRequest> request) {
+  REQUIRE_IO_THREAD();
+
+  if (csettings.cookies.size() == 0)
+    return false;
+
+  CefRefPtr<CefCookieManager> cookieManager =
+      CefCookieManager::GetGlobalManager();
+
+  std::map<std::string, std::string>::iterator cookie_it;
+  for (cookie_it = csettings.cookies.begin(); 
+       cookie_it != csettings.cookies.end();
+       cookie_it++)
+  {
+    CefCookie cookie;
+    CefString(&cookie.name).FromString(cookie_it->first);
+    CefString(&cookie.value).FromString(cookie_it->second);
+    cookieManager->SetCookie(request->GetURL(), cookie);
+  }
+
+  return false;
 }
 
 bool ClientHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
@@ -656,94 +677,23 @@ std::string ClientHandler::GetLastDownloadFile() {
 }
 
 void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
-  std::string devtools_url = browser->GetHost()->GetDevToolsURL(true);
-  if (!devtools_url.empty()) {
-    if (m_bExternalDevTools) {
-      // Open DevTools in an external browser window.
-      LaunchExternalBrowser(devtools_url);
-    } else if (m_OpenDevToolsURLs.find(devtools_url) ==
-               m_OpenDevToolsURLs.end()) {
-      // Open DevTools in a popup window.
-      m_OpenDevToolsURLs.insert(devtools_url);
-      browser->GetMainFrame()->ExecuteJavaScript(
-          "window.open('" +  devtools_url + "');", "about:blank", 0);
-    }
-  }
+  CefWindowInfo windowInfo;
+  CefBrowserSettings settings;
+
+#if defined(OS_WIN)
+  windowInfo.SetAsPopup(browser->GetHost()->GetWindowHandle(), "DevTools");
+#endif
+
+  browser->GetHost()->ShowDevTools(windowInfo, this, settings);
 }
 
-// static
-void ClientHandler::LaunchExternalBrowser(const std::string& url) {
-  if (CefCurrentlyOn(TID_PROCESS_LAUNCHER)) {
-    // Retrieve the current executable path.
-    CefString file_exe;
-    if (!CefGetPath(PK_FILE_EXE, file_exe))
-      return;
-
-    // Create the command line.
-    CefRefPtr<CefCommandLine> command_line =
-        CefCommandLine::CreateCommandLine();
-    command_line->SetProgram(file_exe);
-    command_line->AppendSwitchWithValue(cefclient::kUrl, url);
-
-    // Launch the process.
-    CefLaunchProcess(command_line);
-  } else {
-    // Execute on the PROCESS_LAUNCHER thread.
-    CefPostTask(TID_PROCESS_LAUNCHER,
-        NewCefRunnableFunction(&ClientHandler::LaunchExternalBrowser, url));
-  }
+void ClientHandler::CloseDevTools(CefRefPtr<CefBrowser> browser) {
+  browser->GetHost()->CloseDevTools();
 }
 
 void ClientHandler::BeginTracing() {
   if (CefCurrentlyOn(TID_UI)) {
-    class Client : public CefTraceClient,
-                   public CefRunFileDialogCallback {
-     public:
-      explicit Client(CefRefPtr<ClientHandler> handler)
-          : handler_(handler),
-            trace_data_("{\"traceEvents\":["),
-            first_(true) {
-      }
-
-      virtual void OnTraceDataCollected(const char* fragment,
-                                        size_t fragment_size) OVERRIDE {
-        if (first_)
-          first_ = false;
-        else
-          trace_data_.append(",");
-        trace_data_.append(fragment, fragment_size);
-      }
-
-      virtual void OnEndTracingComplete() OVERRIDE {
-        REQUIRE_UI_THREAD();
-        trace_data_.append("]}");
-
-        static const char kDefaultFileName[] = "trace.txt";
-        std::string path = handler_->GetDownloadPath(kDefaultFileName);
-        if (path.empty())
-          path = kDefaultFileName;
-
-        handler_->GetBrowser()->GetHost()->RunFileDialog(
-            FILE_DIALOG_SAVE, CefString(), path, std::vector<CefString>(),
-            this);
-      }
-
-      virtual void OnFileDialogDismissed(
-          CefRefPtr<CefBrowserHost> browser_host,
-          const std::vector<CefString>& file_paths) OVERRIDE {
-        if (!file_paths.empty())
-          handler_->Save(file_paths.front(), trace_data_);
-      }
-
-     private:
-      CefRefPtr<ClientHandler> handler_;
-      std::string trace_data_;
-      bool first_;
-
-      IMPLEMENT_REFCOUNTING(Callback);
-    };
-
-    CefBeginTracing(new Client(this), CefString());
+    CefBeginTracing(CefString());
   } else {
     CefPostTask(TID_UI,
         NewCefRunnableMethod(this, &ClientHandler::BeginTracing));
@@ -752,10 +702,53 @@ void ClientHandler::BeginTracing() {
 
 void ClientHandler::EndTracing() {
   if (CefCurrentlyOn(TID_UI)) {
-    CefEndTracingAsync();
+    class Client : public CefEndTracingCallback,
+                   public CefRunFileDialogCallback {
+     public:
+      explicit Client(CefRefPtr<ClientHandler> handler)
+          : handler_(handler) {
+        RunDialog();
+      }
+
+      void RunDialog() {
+        static const char kDefaultFileName[] = "trace.txt";
+        std::string path = handler_->GetDownloadPath(kDefaultFileName);
+        if (path.empty())
+          path = kDefaultFileName;
+
+        // Results in a call to OnFileDialogDismissed.
+        handler_->GetBrowser()->GetHost()->RunFileDialog(
+            FILE_DIALOG_SAVE, CefString(), path, std::vector<CefString>(),
+            this);
+      }
+
+      virtual void OnFileDialogDismissed(
+          CefRefPtr<CefBrowserHost> browser_host,
+          const std::vector<CefString>& file_paths) OVERRIDE {
+        if (!file_paths.empty()) {
+          // File selected. Results in a call to OnEndTracingComplete.
+          CefEndTracingAsync(file_paths.front(), this);
+        } else {
+          // No file selected. Discard the trace data.
+          CefEndTracingAsync(CefString(), NULL);
+        }
+      }
+
+      virtual void OnEndTracingComplete(const CefString& tracing_file) OVERRIDE {
+        handler_->SetLastDownloadFile(tracing_file.ToString());
+        handler_->SendNotification(NOTIFY_DOWNLOAD_COMPLETE);
+      }
+
+     private:
+      CefRefPtr<ClientHandler> handler_;
+
+      IMPLEMENT_REFCOUNTING(Callback);
+    };
+
+    new Client(this);
   } else {
     CefPostTask(TID_UI,
-        NewCefRunnableMethod(this, &ClientHandler::BeginTracing));
+        NewCefRunnableMethod(this, &ClientHandler::EndTracing));
   }
 }
 
@@ -775,16 +768,15 @@ bool ClientHandler::Save(const std::string& path, const std::string& data) {
 }
 
 // static
-void ClientHandler::CreateProcessMessageDelegates(
-      ProcessMessageDelegateSet& delegates) {
-  // Create the binding test delegates.
-  binding_test::CreateProcessMessageDelegates(delegates);
+void ClientHandler::CreateMessageHandlers(MessageHandlerSet& handlers) {
+  // Create the dialog test handlers.
+  dialog_test::CreateMessageHandlers(handlers);
 
-  // Create the dialog test delegates.
-  dialog_test::CreateProcessMessageDelegates(delegates);
+  // Create the binding test handlers.
+  binding_test::CreateMessageHandlers(handlers);
 
-  // Create the window test delegates.
-  window_test::CreateProcessMessageDelegates(delegates);
+  // Create the window test handlers.
+  window_test::CreateMessageHandlers(handlers);
 }
 
 void ClientHandler::BuildTestMenu(CefRefPtr<CefMenuModel> model) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -20,7 +20,7 @@
 
 int CEF_CALLBACK dialog_handler_on_file_dialog(
     struct _cef_dialog_handler_t* self, cef_browser_t* browser,
-    enum cef_file_dialog_mode_t mode, const cef_string_t* title,
+    cef_file_dialog_mode_t mode, const cef_string_t* title,
     const cef_string_t* default_file_name, cef_string_list_t accept_types,
     cef_file_dialog_callback_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

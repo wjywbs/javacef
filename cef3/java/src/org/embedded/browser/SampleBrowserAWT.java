@@ -20,14 +20,6 @@ public class SampleBrowserAWT extends JFrame {
 		bstart = new JButton("Start");
 		bstart.setBounds(15, 20, 100, 30);
 		bstart.addActionListener(new ActionListener() {
-			void shortWait() {
-				try {
-					Thread.sleep(300);
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
-			}
-			
 			public void actionPerformed(ActionEvent e) {
 				// Simple usage.
 				ChromeWindow.loadUrl("google.com");

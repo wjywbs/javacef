@@ -10,6 +10,7 @@ public class Chromium extends Canvas {
 	static volatile boolean inited = false;
 	static int count = 0;
 	static HashMap<Integer, Chromium> chmap = new HashMap<Integer, Chromium>();
+	static boolean OS_Windows, OS_Mac, OS_Linux;
 	int id;
 	long hwnd, chptr;
 	boolean tab = false, webpage_loading = false;
@@ -38,7 +39,7 @@ public class Chromium extends Canvas {
 		chromeset = chromesettings.Finalize();
 	  synchronized (chmap) {
 		try {
-			if (System.getProperty("os.name").equals("Mac OS X")) {
+			if (OS_Mac) {
 				Object NSview;
 				Field viewField = Control.class.getDeclaredField("view");
 				NSview = viewField.get(this);
@@ -52,7 +53,7 @@ public class Chromium extends Canvas {
 					hwnd = (Integer) idField.get(NSview);
 			} else {
 				Field field;
-				if (System.getProperty("os.name").startsWith("Windows"))
+				if (OS_Windows)
 					field = Control.class.getDeclaredField("handle");
 				else // Linux
 					field = Widget.class.getDeclaredField("handle");
@@ -70,17 +71,17 @@ public class Chromium extends Canvas {
 		if (inited) {
 			tab = true;
 			browser_new(hwnd, id, url, chromeset);
-		} else if (!System.getProperty("os.name").equals("Mac OS X") &&
-				   !System.getProperty("os.name").equals("Linux")) {
+		} else if (OS_Windows) {
 			init = new Thread(new Runnable() {
 				public void run() {
 					browser_init(hwnd, url, chromeset);
 				}
 			});
 			init.start();
-			while (!inited) { try {
-				Thread.sleep(3);
-			  } catch (InterruptedException e) { }
+			while (!inited) {
+				try {
+					Thread.sleep(3);
+				} catch (InterruptedException e) { }
 			}
 		} else {
 			browser_init(hwnd, url, chromeset);
@@ -243,8 +244,7 @@ public class Chromium extends Canvas {
 	}
 	
 	void load_change(final boolean loading) {
-		if (System.getProperty("os.name").equals("Mac OS X") ||
-			System.getProperty("os.name").startsWith("Windows")) {
+		if (OS_Windows || OS_Mac) {
 			browser_resized(chptr, hwnd);
 		}
 		webpage_loading = loading;
@@ -283,12 +283,13 @@ public class Chromium extends Canvas {
 	
 	static {
 		String os = System.getProperty("os.name");
-		if (os.startsWith("Windows"))
+		OS_Windows = os.startsWith("Windows");
+		OS_Mac = os.equals("Mac OS X");
+		OS_Linux = os.equals("Linux");
+		
+		if (OS_Windows)
 			System.loadLibrary("libcef");
-		//else
-		//	System.loadLibrary("cef");
 		System.loadLibrary("chromium_loader");
-//		System.load("path\\to\\chromium_loader_win.dll");
 	}
 	
 	native void browser_init(long bhwnd, String url, ChromeSettings cset);

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -14,6 +14,7 @@
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
+#include "libcef_dll/ctocpp/request_context_ctocpp.h"
 #include "libcef_dll/transfer_util.h"
 
 
@@ -21,17 +22,19 @@
 
 bool CefBrowserHost::CreateBrowser(const CefWindowInfo& windowInfo,
     CefRefPtr<CefClient> client, const CefString& url,
-    const CefBrowserSettings& settings) {
+    const CefBrowserSettings& settings,
+    CefRefPtr<CefRequestContext> request_context) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Unverified params: client, url
+  // Unverified params: client, url, request_context
 
   // Execute
   int _retval = cef_browser_host_create_browser(
       &windowInfo,
       CefClientCppToC::Wrap(client),
       url.GetStruct(),
-      &settings);
+      &settings,
+      CefRequestContextCToCpp::Unwrap(request_context));
 
   // Return type: bool
   return _retval?true:false;
@@ -39,17 +42,19 @@ bool CefBrowserHost::CreateBrowser(const CefWindowInfo& windowInfo,
 
 CefRefPtr<CefBrowser> CefBrowserHost::CreateBrowserSync(
     const CefWindowInfo& windowInfo, CefRefPtr<CefClient> client,
-    const CefString& url, const CefBrowserSettings& settings) {
+    const CefString& url, const CefBrowserSettings& settings,
+    CefRefPtr<CefRequestContext> request_context) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Unverified params: client, url
+  // Unverified params: client, url, request_context
 
   // Execute
   cef_browser_t* _retval = cef_browser_host_create_browser_sync(
       &windowInfo,
       CefClientCppToC::Wrap(client),
       url.GetStruct(),
-      &settings);
+      &settings,
+      CefRequestContextCToCpp::Unwrap(request_context));
 
   // Return type: refptr_same
   return CefBrowserCToCpp::Wrap(_retval);
@@ -92,7 +97,7 @@ void CefBrowserHostCToCpp::CloseBrowser(bool force_close) {
       force_close);
 }
 
-void CefBrowserHostCToCpp::SetFocus(bool enable) {
+void CefBrowserHostCToCpp::SetFocus(bool focus) {
   if (CEF_MEMBER_MISSING(struct_, set_focus))
     return;
 
@@ -100,7 +105,18 @@ void CefBrowserHostCToCpp::SetFocus(bool enable) {
 
   // Execute
   struct_->set_focus(struct_,
-      enable);
+      focus);
+}
+
+void CefBrowserHostCToCpp::SetWindowVisibility(bool visible) {
+  if (CEF_MEMBER_MISSING(struct_, set_window_visibility))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  struct_->set_window_visibility(struct_,
+      visible);
 }
 
 CefWindowHandle CefBrowserHostCToCpp::GetWindowHandle() {
@@ -142,20 +158,17 @@ CefRefPtr<CefClient> CefBrowserHostCToCpp::GetClient() {
   return CefClientCppToC::Unwrap(_retval);
 }
 
-CefString CefBrowserHostCToCpp::GetDevToolsURL(bool http_scheme) {
-  if (CEF_MEMBER_MISSING(struct_, get_dev_tools_url))
-    return CefString();
+CefRefPtr<CefRequestContext> CefBrowserHostCToCpp::GetRequestContext() {
+  if (CEF_MEMBER_MISSING(struct_, get_request_context))
+    return NULL;
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_string_userfree_t _retval = struct_->get_dev_tools_url(struct_,
-      http_scheme);
+  cef_request_context_t* _retval = struct_->get_request_context(struct_);
 
-  // Return type: string
-  CefString _retvalStr;
-  _retvalStr.AttachToUserFree(_retval);
-  return _retvalStr;
+  // Return type: refptr_same
+  return CefRequestContextCToCpp::Wrap(_retval);
 }
 
 double CefBrowserHostCToCpp::GetZoomLevel() {
@@ -230,6 +243,77 @@ void CefBrowserHostCToCpp::StartDownload(const CefString& url) {
   // Execute
   struct_->start_download(struct_,
       url.GetStruct());
+}
+
+void CefBrowserHostCToCpp::Print() {
+  if (CEF_MEMBER_MISSING(struct_, print))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  struct_->print(struct_);
+}
+
+void CefBrowserHostCToCpp::Find(int identifier, const CefString& searchText,
+    bool forward, bool matchCase, bool findNext) {
+  if (CEF_MEMBER_MISSING(struct_, find))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: searchText; type: string_byref_const
+  DCHECK(!searchText.empty());
+  if (searchText.empty())
+    return;
+
+  // Execute
+  struct_->find(struct_,
+      identifier,
+      searchText.GetStruct(),
+      forward,
+      matchCase,
+      findNext);
+}
+
+void CefBrowserHostCToCpp::StopFinding(bool clearSelection) {
+  if (CEF_MEMBER_MISSING(struct_, stop_finding))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  struct_->stop_finding(struct_,
+      clearSelection);
+}
+
+void CefBrowserHostCToCpp::ShowDevTools(const CefWindowInfo& windowInfo,
+    CefRefPtr<CefClient> client, const CefBrowserSettings& settings) {
+  if (CEF_MEMBER_MISSING(struct_, show_dev_tools))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: client; type: refptr_diff
+  DCHECK(client.get());
+  if (!client.get())
+    return;
+
+  // Execute
+  struct_->show_dev_tools(struct_,
+      &windowInfo,
+      CefClientCppToC::Wrap(client),
+      &settings);
+}
+
+void CefBrowserHostCToCpp::CloseDevTools() {
+  if (CEF_MEMBER_MISSING(struct_, close_dev_tools))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  struct_->close_dev_tools(struct_);
 }
 
 void CefBrowserHostCToCpp::SetMouseCursorChangeDisabled(bool disabled) {

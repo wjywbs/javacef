@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -10,6 +10,7 @@
 // for more information.
 //
 
+#include "libcef_dll/cpptoc/load_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/render_process_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/domnode_ctocpp.h"
@@ -88,10 +89,26 @@ void CEF_CALLBACK render_process_handler_on_browser_destroyed(
       CefBrowserCToCpp::Wrap(browser));
 }
 
+cef_load_handler_t* CEF_CALLBACK render_process_handler_get_load_handler(
+    struct _cef_render_process_handler_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return NULL;
+
+  // Execute
+  CefRefPtr<CefLoadHandler> _retval = CefRenderProcessHandlerCppToC::Get(
+      self)->GetLoadHandler();
+
+  // Return type: refptr_same
+  return CefLoadHandlerCppToC::Wrap(_retval);
+}
+
 int CEF_CALLBACK render_process_handler_on_before_navigation(
     struct _cef_render_process_handler_t* self, cef_browser_t* browser,
     cef_frame_t* frame, struct _cef_request_t* request,
-    enum cef_navigation_type_t navigation_type, int is_redirect) {
+    cef_navigation_type_t navigation_type, int is_redirect) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -241,7 +258,7 @@ void CEF_CALLBACK render_process_handler_on_focused_node_changed(
 
 int CEF_CALLBACK render_process_handler_on_process_message_received(
     struct _cef_render_process_handler_t* self, cef_browser_t* browser,
-    enum cef_process_id_t source_process, cef_process_message_t* message) {
+    cef_process_id_t source_process, cef_process_message_t* message) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -282,6 +299,7 @@ CefRenderProcessHandlerCppToC::CefRenderProcessHandlerCppToC(
       render_process_handler_on_browser_created;
   struct_.struct_.on_browser_destroyed =
       render_process_handler_on_browser_destroyed;
+  struct_.struct_.get_load_handler = render_process_handler_get_load_handler;
   struct_.struct_.on_before_navigation =
       render_process_handler_on_before_navigation;
   struct_.struct_.on_context_created =

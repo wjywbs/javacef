@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2014 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,11 +38,13 @@
 #define CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
 #pragma once
 
+#include "include/capi/cef_base_capi.h"
+#include "include/capi/cef_browser_capi.h"
+#include "include/capi/cef_frame_capi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "include/capi/cef_base_capi.h"
 
 
 ///
@@ -54,13 +56,6 @@ typedef struct _cef_display_handler_t {
   // Base structure.
   ///
   cef_base_t base;
-
-  ///
-  // Called when the loading state has changed.
-  ///
-  void (CEF_CALLBACK *on_loading_state_change)(
-      struct _cef_display_handler_t* self, struct _cef_browser_t* browser,
-      int isLoading, int canGoBack, int canGoForward);
 
   ///
   // Called when a frame's address has changed.

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2014 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,11 +38,25 @@
 #define CEF_INCLUDE_CAPI_CEF_CLIENT_CAPI_H_
 #pragma once
 
+#include "include/capi/cef_base_capi.h"
+#include "include/capi/cef_context_menu_handler_capi.h"
+#include "include/capi/cef_dialog_handler_capi.h"
+#include "include/capi/cef_display_handler_capi.h"
+#include "include/capi/cef_download_handler_capi.h"
+#include "include/capi/cef_drag_handler_capi.h"
+#include "include/capi/cef_focus_handler_capi.h"
+#include "include/capi/cef_geolocation_handler_capi.h"
+#include "include/capi/cef_jsdialog_handler_capi.h"
+#include "include/capi/cef_keyboard_handler_capi.h"
+#include "include/capi/cef_life_span_handler_capi.h"
+#include "include/capi/cef_load_handler_capi.h"
+#include "include/capi/cef_process_message_capi.h"
+#include "include/capi/cef_render_handler_capi.h"
+#include "include/capi/cef_request_handler_capi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "include/capi/cef_base_capi.h"
 
 
 ///
@@ -143,7 +157,7 @@ typedef struct _cef_client_t {
   // reference to or attempt to access the message outside of this callback.
   ///
   int (CEF_CALLBACK *on_process_message_received)(struct _cef_client_t* self,
-      struct _cef_browser_t* browser, enum cef_process_id_t source_process,
+      struct _cef_browser_t* browser, cef_process_id_t source_process,
       struct _cef_process_message_t* message);
 } cef_client_t;
 

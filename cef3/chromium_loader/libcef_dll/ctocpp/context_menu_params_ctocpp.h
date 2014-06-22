@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -40,7 +40,7 @@ class CefContextMenuParamsCToCpp
   virtual CefString GetLinkUrl() OVERRIDE;
   virtual CefString GetUnfilteredLinkUrl() OVERRIDE;
   virtual CefString GetSourceUrl() OVERRIDE;
-  virtual bool IsImageBlocked() OVERRIDE;
+  virtual bool HasImageContents() OVERRIDE;
   virtual CefString GetPageUrl() OVERRIDE;
   virtual CefString GetFrameUrl() OVERRIDE;
   virtual CefString GetFrameCharset() OVERRIDE;

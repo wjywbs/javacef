@@ -40,6 +40,13 @@ public class ChromeWindow {
 					dbg = sharedDisplay;
 				
 				sbg = new Shell(dbg);
+				
+				// The browser needs to know the size in CEF 1750 on Windows.
+				// Otherwise, it will have "Failed to initialize command
+				// buffer service" errors.
+				if (System.getProperty("os.name").startsWith("Windows"))
+					sbg.setLayout(new FillLayout());
+				
 				cbg = new Chromium(sbg, SWT.NONE);
 				sbg.setAlpha(0);
 				sbg.open();
@@ -102,9 +109,11 @@ public class ChromeWindow {
 	 * Shutdown the browser engine.
 	 */
 	public static void Shutdown() {
+		Close(false);
 		synchronized (lock) {
 			if (dbg != null) {
-				sbg.close();
+				if (!sbg.isDisposed())
+					sbg.close();
 				if (sharedDisplay == null)
 					dbg.dispose();
 				dbg = null;
@@ -187,16 +196,23 @@ public class ChromeWindow {
 					}
 				});
 				bl.add(b);
-				display.timerExec(50, new Runnable() {
-					void run_i() {
+				
+				final Runnable focusLastTab = new Runnable() {
+					public void run() {
 						if (!folder.isDisposed()) {
 							folder.setSelection(folder.getItemCount() - 1);
 							setNavControl();
 							setFocus();
 						}
 					}
-					public void run() { synchronized (tablock) { run_i(); } }
-			    });
+				};
+				if (System.getProperty("os.name").startsWith("Windows"))
+					focusLastTab.run();
+				else {
+					display.timerExec(50, new Runnable() {
+						public void run() { synchronized (tablock) { focusLastTab.run(); } }
+					});
+				}
 			}
 		});
 		if (bl.size() == 0)

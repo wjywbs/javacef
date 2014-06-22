@@ -52,7 +52,7 @@ void CreateBrowser(CefWindowHandle handle, CefString url, CefRefPtr<ClientHandle
   // Create the new child browser window
   CefBrowserHost::CreateBrowser(info,
                                 static_cast<CefRefPtr<CefClient> >(g_handler_local),
-                                url, bsettings);
+                                url, bsettings, NULL);
 }
 
 /*
@@ -183,6 +183,14 @@ gboolean EndTracingActivated(GtkWidget* widget) {
   return FALSE;  // Don't stop this message.
 }
 
+// Callback for Tests > Print menu item.
+gboolean PrintActivated(GtkWidget* widget) {
+  if (g_handler.get())
+    g_handler->GetBrowser()->GetHost()->Print();
+
+  return FALSE;  // Don't stop this message.
+}
+
 // Callback for Tests > Other Tests... menu item.
 gboolean OtherTestsActivated(GtkWidget* widget) {
   if (g_handler.get() && g_handler->GetBrowserId())
@@ -266,6 +274,8 @@ GtkWidget* CreateMenuBar() {
                G_CALLBACK(BeginTracingActivated));
   AddMenuEntry(debug_menu, "End Tracing",
                G_CALLBACK(EndTracingActivated));
+  AddMenuEntry(debug_menu, "Print",
+               G_CALLBACK(PrintActivated));
   AddMenuEntry(debug_menu, "Other Tests",
                G_CALLBACK(OtherTestsActivated));
   return menu_bar;
@@ -287,7 +297,7 @@ int main(int argc, char* argv[]) {
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get());
+  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
   if (exit_code >= 0)
     return exit_code;
 
@@ -310,7 +320,7 @@ int main(int argc, char* argv[]) {
   AppGetSettings(settings);
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
 
   // Register the scheme handler.
   scheme_test::InitTest();
@@ -393,7 +403,7 @@ int main(int argc, char* argv[]) {
 
   CefBrowserHost::CreateBrowserSync(
       window_info, g_handler.get(),
-      g_handler->GetStartupURL(), browserSettings);
+      g_handler->GetStartupURL(), browserSettings, NULL);
 
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));

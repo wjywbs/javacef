@@ -53,5 +53,5 @@ void CreateBrowser(CefWindowHandle handle, CefString url, CefRefPtr<ClientHandle
   // Create the new child browser window
   CefBrowserHost::CreateBrowser(info,
       static_cast<CefRefPtr<CefClient> >(g_handler_local),
-	  url, bsettings);
+	  url, bsettings, NULL);
 }

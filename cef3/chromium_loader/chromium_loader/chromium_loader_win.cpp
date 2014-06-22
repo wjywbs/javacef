@@ -46,6 +46,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
 
   settings.multi_threaded_message_loop = message_loop;
   settings.log_severity = LOGSEVERITY_DISABLE;
+  settings.no_sandbox = true;
 
   CefString path = CefString(szWorkingDir);
 
@@ -58,7 +59,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
 #endif
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
 
   HWND hMain;
   hMain = (HWND)((void*)hwnd);

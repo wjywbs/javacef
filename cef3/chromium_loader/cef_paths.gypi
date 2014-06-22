@@ -1,4 +1,4 @@
-# Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+# Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 # reserved. Use of this source code is governed by a BSD-style license that
 # can be found in the LICENSE file.
 #
@@ -13,6 +13,7 @@
   'variables': {
     'autogen_cpp_includes': [
       'include/cef_app.h',
+      'include/cef_auth_callback.h',
       'include/cef_browser.h',
       'include/cef_browser_process_handler.h',
       'include/cef_callback.h',
@@ -43,6 +44,8 @@
       'include/cef_render_handler.h',
       'include/cef_render_process_handler.h',
       'include/cef_request.h',
+      'include/cef_request_context.h',
+      'include/cef_request_context_handler.h',
       'include/cef_request_handler.h',
       'include/cef_resource_bundle_handler.h',
       'include/cef_resource_handler.h',
@@ -62,6 +65,7 @@
     ],
     'autogen_capi_includes': [
       'include/capi/cef_app_capi.h',
+      'include/capi/cef_auth_callback_capi.h',
       'include/capi/cef_browser_capi.h',
       'include/capi/cef_browser_process_handler_capi.h',
       'include/capi/cef_callback_capi.h',
@@ -92,6 +96,8 @@
       'include/capi/cef_render_handler_capi.h',
       'include/capi/cef_render_process_handler_capi.h',
       'include/capi/cef_request_capi.h',
+      'include/capi/cef_request_context_capi.h',
+      'include/capi/cef_request_context_handler_capi.h',
       'include/capi/cef_request_handler_capi.h',
       'include/capi/cef_resource_bundle_handler_capi.h',
       'include/capi/cef_resource_handler_capi.h',
@@ -168,6 +174,8 @@
       'libcef_dll/cpptoc/drag_data_cpptoc.h',
       'libcef_dll/ctocpp/drag_handler_ctocpp.cc',
       'libcef_dll/ctocpp/drag_handler_ctocpp.h',
+      'libcef_dll/ctocpp/end_tracing_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/end_tracing_callback_ctocpp.h',
       'libcef_dll/cpptoc/file_dialog_callback_cpptoc.cc',
       'libcef_dll/cpptoc/file_dialog_callback_cpptoc.h',
       'libcef_dll/ctocpp/focus_handler_ctocpp.cc',
@@ -210,6 +218,10 @@
       'libcef_dll/ctocpp/render_process_handler_ctocpp.h',
       'libcef_dll/cpptoc/request_cpptoc.cc',
       'libcef_dll/cpptoc/request_cpptoc.h',
+      'libcef_dll/cpptoc/request_context_cpptoc.cc',
+      'libcef_dll/cpptoc/request_context_cpptoc.h',
+      'libcef_dll/ctocpp/request_context_handler_ctocpp.cc',
+      'libcef_dll/ctocpp/request_context_handler_ctocpp.h',
       'libcef_dll/ctocpp/request_handler_ctocpp.cc',
       'libcef_dll/ctocpp/request_handler_ctocpp.h',
       'libcef_dll/ctocpp/resource_bundle_handler_ctocpp.cc',
@@ -234,8 +246,6 @@
       'libcef_dll/ctocpp/task_ctocpp.h',
       'libcef_dll/cpptoc/task_runner_cpptoc.cc',
       'libcef_dll/cpptoc/task_runner_cpptoc.h',
-      'libcef_dll/ctocpp/trace_client_ctocpp.cc',
-      'libcef_dll/ctocpp/trace_client_ctocpp.h',
       'libcef_dll/cpptoc/urlrequest_cpptoc.cc',
       'libcef_dll/cpptoc/urlrequest_cpptoc.h',
       'libcef_dll/ctocpp/urlrequest_client_ctocpp.cc',
@@ -326,6 +336,8 @@
       'libcef_dll/ctocpp/drag_data_ctocpp.h',
       'libcef_dll/cpptoc/drag_handler_cpptoc.cc',
       'libcef_dll/cpptoc/drag_handler_cpptoc.h',
+      'libcef_dll/cpptoc/end_tracing_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/end_tracing_callback_cpptoc.h',
       'libcef_dll/ctocpp/file_dialog_callback_ctocpp.cc',
       'libcef_dll/ctocpp/file_dialog_callback_ctocpp.h',
       'libcef_dll/cpptoc/focus_handler_cpptoc.cc',
@@ -368,6 +380,10 @@
       'libcef_dll/cpptoc/render_process_handler_cpptoc.h',
       'libcef_dll/ctocpp/request_ctocpp.cc',
       'libcef_dll/ctocpp/request_ctocpp.h',
+      'libcef_dll/ctocpp/request_context_ctocpp.cc',
+      'libcef_dll/ctocpp/request_context_ctocpp.h',
+      'libcef_dll/cpptoc/request_context_handler_cpptoc.cc',
+      'libcef_dll/cpptoc/request_context_handler_cpptoc.h',
       'libcef_dll/cpptoc/request_handler_cpptoc.cc',
       'libcef_dll/cpptoc/request_handler_cpptoc.h',
       'libcef_dll/cpptoc/resource_bundle_handler_cpptoc.cc',
@@ -392,8 +408,6 @@
       'libcef_dll/cpptoc/task_cpptoc.h',
       'libcef_dll/ctocpp/task_runner_ctocpp.cc',
       'libcef_dll/ctocpp/task_runner_ctocpp.h',
-      'libcef_dll/cpptoc/trace_client_cpptoc.cc',
-      'libcef_dll/cpptoc/trace_client_cpptoc.h',
       'libcef_dll/ctocpp/urlrequest_ctocpp.cc',
       'libcef_dll/ctocpp/urlrequest_ctocpp.h',
       'libcef_dll/cpptoc/urlrequest_client_cpptoc.cc',

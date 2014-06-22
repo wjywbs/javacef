@@ -5,6 +5,7 @@
 {
   'variables': {
     'chromium_code': 1,
+    'framework_name': 'Chromium Embedded Framework',
     'linux_use_gold_binary': 0,
     'linux_use_gold_flags': 0,
     # Don't use clang plugins to avoid plugin check.

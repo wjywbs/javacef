@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -20,7 +20,7 @@
 int CEF_CALLBACK jsdialog_handler_on_jsdialog(
     struct _cef_jsdialog_handler_t* self, cef_browser_t* browser,
     const cef_string_t* origin_url, const cef_string_t* accept_lang,
-    enum cef_jsdialog_type_t dialog_type, const cef_string_t* message_text,
+    cef_jsdialog_type_t dialog_type, const cef_string_t* message_text,
     const cef_string_t* default_prompt_text, cef_jsdialog_callback_t* callback,
     int* suppress_message) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

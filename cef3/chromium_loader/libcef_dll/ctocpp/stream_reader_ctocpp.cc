@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -131,6 +131,19 @@ int CefStreamReaderCToCpp::Eof() {
 
   // Return type: simple
   return _retval;
+}
+
+bool CefStreamReaderCToCpp::MayBlock() {
+  if (CEF_MEMBER_MISSING(struct_, may_block))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = struct_->may_block(struct_);
+
+  // Return type: bool
+  return _retval?true:false;
 }
 
 

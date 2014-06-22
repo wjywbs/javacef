@@ -36,11 +36,13 @@
     ],
     'includes_wrapper': [
       'include/wrapper/cef_byte_read_handler.h',
+      'include/wrapper/cef_message_router.h',
       'include/wrapper/cef_stream_resource_handler.h',
       'include/wrapper/cef_xml_object.h',
       'include/wrapper/cef_zip_archive.h',
     ],
     'includes_win': [
+      'include/cef_sandbox_win.h',
       'include/internal/cef_types_win.h',
       'include/internal/cef_win.h',
     ],
@@ -66,13 +68,16 @@
     ],
     'libcef_dll_wrapper_sources_common': [
       'libcef_dll/cef_logging.h',
+      'libcef_dll/cef_macros.h',
       'libcef_dll/cpptoc/base_cpptoc.h',
       'libcef_dll/cpptoc/cpptoc.h',
       'libcef_dll/ctocpp/base_ctocpp.h',
       'libcef_dll/ctocpp/ctocpp.h',
       'libcef_dll/transfer_util.cpp',
       'libcef_dll/transfer_util.h',
+      'libcef_dll/wrapper/cef_browser_info_map.h',
       'libcef_dll/wrapper/cef_byte_read_handler.cc',
+      'libcef_dll/wrapper/cef_message_router.cc',
       'libcef_dll/wrapper/cef_stream_resource_handler.cc',
       'libcef_dll/wrapper/cef_xml_object.cc',
       'libcef_dll/wrapper/cef_zip_archive.cc',
@@ -131,6 +136,7 @@
       '<@(cefclient_bundle_resources_common)',
     ],
     'cefclient_sources_win': [
+      'cefclient/cefclient.exe.manifest',
       'cefclient/cefclient.rc',
       'cefclient/cefclient_osr_widget_win.h',
       'cefclient/cefclient_osr_widget_win.cpp',
@@ -203,6 +209,39 @@
     ],
     'cefclient_bundle_resources_linux': [
       '<@(cefclient_bundle_resources_common)',
+    ],
+    'cefsimple_sources_common': [
+      'cefsimple/simple_app.cpp',
+      'cefsimple/simple_app.h',
+      'cefsimple/simple_handler.cpp',
+      'cefsimple/simple_handler.h',
+      'cefsimple/util.h',
+    ],
+    'cefsimple_sources_win': [
+      'cefsimple/cefsimple.exe.manifest',
+      'cefsimple/cefsimple.rc',
+      'cefsimple/cefsimple_win.cpp',
+      'cefsimple/simple_handler_win.cpp',
+      'cefsimple/resource.h',
+      'cefsimple/res/cefsimple.ico',
+      'cefsimple/res/small.ico',
+    ],
+    'cefsimple_sources_mac': [
+      'cefsimple/cefsimple_mac.mm',
+      'cefsimple/simple_handler_mac.mm',
+    ],
+    'cefsimple_sources_mac_helper': [
+      'cefsimple/process_helper_mac.cpp',
+    ],
+    'cefsimple_bundle_resources_mac': [
+      'cefsimple/mac/cefsimple.icns',
+      'cefsimple/mac/English.lproj/InfoPlist.strings',
+      'cefsimple/mac/English.lproj/MainMenu.xib',
+      'cefsimple/mac/Info.plist',
+    ],
+    'cefsimple_sources_linux': [
+      'cefsimple/cefsimple_gtk.cpp',
+      'cefsimple/simple_handler_gtk.cpp',
     ],
     'chromium_loader_sources_common': [
       'chromium_loader/jni_tools.h',

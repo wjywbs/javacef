@@ -70,7 +70,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
   BackupSignalHandlers();
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
 
   RestoreSignalHandlers();
 

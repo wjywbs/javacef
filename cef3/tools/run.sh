@@ -38,7 +38,7 @@ if [ "$PLATFORM" == "mac64" ]; then
   checkCefPrebuiltMac
   checkJarExist
 
-  export DYLD_LIBRARY_PATH="$APP_PATH/Contents/Frameworks/Chromium Embedded Framework.framework/Libraries"
+  export DYLD_LIBRARY_PATH="$APP_PATH/Contents/Frameworks/Chromium Embedded Framework.framework"
   export JAVACEF_PATH="$PROJECT_DIR"
 
   "$JAVA_HOME$JAVA_BIN" -XstartOnFirstThread \
@@ -71,10 +71,11 @@ if [ "$PLATFORM" == "linux64" ]; then
 
   export LD_LIBRARY_PATH="$APP_PATH/lib"
   export JAVACEF_PATH="$PROJECT_DIR"
+  export CHROME_DEVEL_SANDBOX="$APP_PATH/chrome-sandbox"
 
   "$JAVA_HOME$JAVA_BIN" \
       -cp "$PROJECT_DIR/java/lib/linux/swt64.jar:$BUILD_DIR/$JAR_NAME" \
-      -Djava.library.path="$BUILD_DIR/lib:$DYLD_LIBRARY_PATH" \
+      -Djava.library.path="$BUILD_DIR/lib:$BUILD_DIR/lib.target" \
       -Duser.dir="$PROJECT_DIR/java" \
       org.embedded.browser.SampleBrowserSWT
 fi
@@ -86,10 +87,11 @@ if [ "$PLATFORM" == "linux32" ]; then
 
   export LD_LIBRARY_PATH="$APP_PATH/lib"
   export JAVACEF_PATH="$PROJECT_DIR"
+  export CHROME_DEVEL_SANDBOX="$APP_PATH/chrome-sandbox"
 
   "$JAVA_HOME$JAVA_BIN" \
       -cp "$PROJECT_DIR/java/lib/linux/swt32.jar:$BUILD_DIR/$JAR_NAME" \
-      -Djava.library.path="$BUILD_DIR/lib:$DYLD_LIBRARY_PATH" \
+      -Djava.library.path="$BUILD_DIR/lib:$BUILD_DIR/lib.target" \
       -Duser.dir="$PROJECT_DIR/java" \
       org.embedded.browser.SampleBrowserSWT
 fi

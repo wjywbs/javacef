@@ -41,11 +41,12 @@ class ClientSchemeHandler : public CefResourceHandler {
     std::string url = request->GetURL();
     if (strstr(url.c_str(), "handler.html") != NULL) {
       // Build the response html
-      data_ = "<html><head><title>Client Scheme Handler</title></head><body>"
+      data_ = "<html><head><title>Client Scheme Handler</title></head>"
+              "<body bgcolor=\"white\">"
               "This contents of this page page are served by the "
               "ClientSchemeHandler class handling the client:// protocol."
               "<br/>You should see an image:"
-              "<br/><img src=\"client://tests/client.png\"><pre>";
+              "<br/><img src=\"client://tests/logo.png\"><pre>";
 
       // Output a string representation of the request
       std::string dump;
@@ -63,7 +64,7 @@ class ClientSchemeHandler : public CefResourceHandler {
 
       // Set the resulting mime type
       mime_type_ = "text/html";
-    } else if (strstr(url.c_str(), "client.png") != NULL) {
+    } else if (strstr(url.c_str(), "logo.png") != NULL) {
       // Load the response image
       if (LoadBinaryResource("logo.png", data_)) {
         handled = true;

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -239,7 +239,7 @@ struct _cef_request_handler_t* CEF_CALLBACK client_get_request_handler(
 }
 
 int CEF_CALLBACK client_on_process_message_received(struct _cef_client_t* self,
-    cef_browser_t* browser, enum cef_process_id_t source_process,
+    cef_browser_t* browser, cef_process_id_t source_process,
     struct _cef_process_message_t* message) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 

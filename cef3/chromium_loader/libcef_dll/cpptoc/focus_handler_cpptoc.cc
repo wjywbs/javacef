@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -35,7 +35,7 @@ void CEF_CALLBACK focus_handler_on_take_focus(struct _cef_focus_handler_t* self,
 }
 
 int CEF_CALLBACK focus_handler_on_set_focus(struct _cef_focus_handler_t* self,
-    cef_browser_t* browser, enum cef_focus_source_t source) {
+    cef_browser_t* browser, cef_focus_source_t source) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);

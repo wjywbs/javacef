@@ -62,10 +62,6 @@ void AppGetSettings(CefSettings& settings) {
 
   CefString(&settings.cache_path) =
       g_command_line->GetSwitchValue(cefclient::kCachePath);
-
-  // Specify a port to enable DevTools if one isn't already specified.
-  if (!g_command_line->HasSwitch("remote-debugging-port"))
-    settings.remote_debugging_port = 8088;
 }
 
 bool AppIsOffScreenRenderingEnabled() {
@@ -84,7 +80,8 @@ void RunGetSourceTest(CefRefPtr<CefBrowser> browser) {
       std::string source = StringReplace(string, "<", "&lt;");
       source = StringReplace(source, ">", "&gt;");
       std::stringstream ss;
-      ss << "<html><body>Source:<pre>" << source << "</pre></body></html>";
+      ss << "<html><body bgcolor=\"white\">Source:<pre>" << source <<
+            "</pre></body></html>";
       browser_->GetMainFrame()->LoadString(ss.str(), "http://tests/getsource");
     }
    private:
@@ -103,7 +100,8 @@ void RunGetTextTest(CefRefPtr<CefBrowser> browser) {
       std::string text = StringReplace(string, "<", "&lt;");
       text = StringReplace(text, ">", "&gt;");
       std::stringstream ss;
-      ss << "<html><body>Text:<pre>" << text << "</pre></body></html>";
+      ss << "<html><body bgcolor=\"white\">Text:<pre>" << text <<
+            "</pre></body></html>";
       browser_->GetMainFrame()->LoadString(ss.str(), "http://tests/gettext");
     }
    private:
@@ -150,7 +148,8 @@ void RunPluginInfoTest(CefRefPtr<CefBrowser> browser) {
    public:
     explicit Visitor(CefRefPtr<CefBrowser> browser)
         : browser_(browser) {
-      html_ = "<html><head><title>Plugin Info Test</title></head><body>"
+      html_ = "<html><head><title>Plugin Info Test</title></head>"
+              "<body bgcolor=\"white\">"
               "\n<b>Installed plugins:</b>";
     }
     ~Visitor() {

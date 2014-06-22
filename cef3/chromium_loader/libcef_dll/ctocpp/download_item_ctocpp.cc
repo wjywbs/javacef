@@ -1,4 +1,4 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -160,14 +160,14 @@ CefString CefDownloadItemCToCpp::GetFullPath() {
   return _retvalStr;
 }
 
-int32 CefDownloadItemCToCpp::GetId() {
+uint32 CefDownloadItemCToCpp::GetId() {
   if (CEF_MEMBER_MISSING(struct_, get_id))
     return 0;
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int32 _retval = struct_->get_id(struct_);
+  uint32 _retval = struct_->get_id(struct_);
 
   // Return type: simple
   return _retval;
