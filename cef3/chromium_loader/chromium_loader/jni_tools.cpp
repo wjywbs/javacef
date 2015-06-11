@@ -13,27 +13,51 @@
 JavaVM* jvm;
 JNIEnv* envs;
 jobject jobjs;
+jclass  jchromium;
+
+class AutoJvmAttach {
+ public:
+  AutoJvmAttach() : env_(NULL), detach_(false) {
+    if (jvm->GetEnv((void**)&env_, JNI_VERSION_1_6) == JNI_EDETACHED) {
+      if (jvm->AttachCurrentThread((void**)&env_, NULL) == JNI_OK)
+        detach_ = true;
+      else
+        printf("Can not get jni env\n");
+    }
+  }
+
+  ~AutoJvmAttach() {
+    if (detach_)
+      jvm->DetachCurrentThread();
+  }
+
+  JNIEnv* get() {
+    return env_;
+  }
+
+  JNIEnv* operator->() {
+    return env_;
+  }
+
+ private:
+  JNIEnv* env_;
+  bool detach_;
+};
 
 void set_jvm(JNIEnv* env, jobject jobj)
 {
   jint rs = env->GetJavaVM(&jvm);
   if (rs != JNI_OK) {
-    printf("Can not get jvm");
+    printf("Can not get jvm\n");
     exit(1);
   }
+  jchromium = (jclass)env->NewGlobalRef(env->FindClass("org/embedded/browser/Chromium"));
   envs = env;
   jobjs = jobj;
 }
 
-void setup_env() {
-  envs = NULL;
-  if (jvm->GetEnv((void**)&envs, JNI_VERSION_1_6) == JNI_EDETACHED &&
-      jvm->AttachCurrentThread((void**)&envs, NULL) != JNI_OK) {
-    printf("Can not get jni env");
-    exit(1);
-  }
-  // TODO: DetachCurrentThread may be needed. jvm can only be attached
-  // to one thread.
+void cleanup_jvm(JNIEnv* env) {
+  env->DeleteGlobalRef(jchromium);
 }
 
 void send_handler(JNIEnv* env, jobject jobj, jlong gh)
@@ -45,10 +69,9 @@ void send_handler(JNIEnv* env, jobject jobj, jlong gh)
 
 void set_title(const char* title, int id)
 {
-  //setup_env();
-  jclass cls = envs->FindClass("org/embedded/browser/Chromium");
-  jmethodID mid = envs->GetStaticMethodID(cls, "title_change", "(Ljava/lang/String;I)V");
-  envs->CallStaticObjectMethod(cls, mid, stringtojstring(envs, title), id);
+  AutoJvmAttach jenv;
+  jmethodID mid = jenv->GetStaticMethodID(jchromium, "title_change", "(Ljava/lang/String;I)V");
+  jenv->CallStaticObjectMethod(jchromium, mid, stringtojstring(jenv.get(), title), id);
 }
 
 jobject get_download_window(const char* fn, long long size, const char* mime)
@@ -104,18 +127,16 @@ void close_tab(int id)
 
 void send_load(int id, bool loading)
 {
-  //setup_env();
-  jclass cls = envs->FindClass("org/embedded/browser/Chromium");
-  jmethodID mid = envs->GetStaticMethodID(cls, "load_change", "(IZ)V");
-  envs->CallStaticObjectMethod(cls, mid, id, loading);
+  AutoJvmAttach jenv;
+  jmethodID mid = jenv->GetStaticMethodID(jchromium, "load_change", "(IZ)V");
+  jenv->CallStaticObjectMethod(jchromium, mid, id, loading);
 }
 
 void send_navstate(int id, bool canGoBack, bool canGoForward)
 {
-  //setup_env();
-  jclass cls = envs->FindClass("org/embedded/browser/Chromium");
-  jmethodID mid = envs->GetStaticMethodID(cls, "navstate_change", "(IZZ)V");
-  envs->CallStaticObjectMethod(cls, mid, id, canGoBack, canGoForward);
+  AutoJvmAttach jenv;
+  jmethodID mid = jenv->GetStaticMethodID(jchromium, "navstate_change", "(IZZ)V");
+  jenv->CallStaticObjectMethod(jchromium, mid, id, canGoBack, canGoForward);
 }
 
 void get_browser_settings(JNIEnv* env, jobject jcset, ChromiumSettings& cset)

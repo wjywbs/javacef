@@ -13,6 +13,7 @@
 jstring stringtojstring(JNIEnv*, const char*);
 
 void set_jvm(JNIEnv* env, jobject jobj);
+void cleanup_jvm(JNIEnv* env);
 void send_handler(JNIEnv* env, jobject jobj, jlong);
 void set_title(const char*, int);
 jobject get_download_window(const char* fn, long long size, const char* mime);

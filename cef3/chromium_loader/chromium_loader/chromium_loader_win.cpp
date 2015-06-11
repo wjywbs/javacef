@@ -86,6 +86,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
     // Run the CEF message loop. This function will block until the application
     // recieves a WM_QUIT message.
     CefRunMessageLoop();
+    cleanup_jvm(env);
     CefShutdown();
   }
 }

@@ -200,6 +200,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1shutdown
     g_handler_local->id = -1;
     mainBrowserHandle = g_handler_local->GetBrowser()->GetHost()->GetWindowHandle();
   }
+  cleanup_jvm(env);
   CefShutdown();
 }
 
