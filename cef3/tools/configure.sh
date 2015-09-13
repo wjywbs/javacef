@@ -13,8 +13,6 @@ TOOL_DIR="$( cd "$( dirname "$0" )" && pwd )"
 if [ ! -d "$GYP_DIR" ]; then
   echo "Checking out gyp into tools/gyp..."
   git clone https://chromium.googlesource.com/external/gyp "$GYP_DIR"
-#  svn checkout --force http://gyp.googlecode.com/svn/trunk "$GYP_DIR" \
-#      --revision 1895
 fi
 
 if [ -z "$GYP_GENERATORS" ]; then
