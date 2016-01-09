@@ -81,5 +81,5 @@ exit 1
 
 :download_gyp
 echo Checking out gyp into tools\gyp...
-call svn checkout --force http://gyp.googlecode.com/svn/trunk %~dp0gyp --revision 1895
+call git clone https://chromium.googlesource.com/external/gyp %~dp0gyp
 goto gyp_ok
