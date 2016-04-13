@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2016 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -14,6 +14,8 @@
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/jsdialog_callback_ctocpp.h"
 
+
+namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
@@ -32,10 +34,6 @@ int CEF_CALLBACK jsdialog_handler_on_jsdialog(
   DCHECK(browser);
   if (!browser)
     return 0;
-  // Verify param: origin_url; type: string_byref_const
-  DCHECK(origin_url);
-  if (!origin_url)
-    return 0;
   // Verify param: callback; type: refptr_diff
   DCHECK(callback);
   if (!callback)
@@ -44,7 +42,8 @@ int CEF_CALLBACK jsdialog_handler_on_jsdialog(
   DCHECK(suppress_message);
   if (!suppress_message)
     return 0;
-  // Unverified params: accept_lang, message_text, default_prompt_text
+  // Unverified params: origin_url, accept_lang, message_text,
+  // default_prompt_text
 
   // Translate param: suppress_message; type: bool_byref
   bool suppress_messageBool = (
@@ -133,22 +132,31 @@ void CEF_CALLBACK jsdialog_handler_on_dialog_closed(
       CefBrowserCToCpp::Wrap(browser));
 }
 
+}  // namespace
+
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefJSDialogHandlerCppToC::CefJSDialogHandlerCppToC(CefJSDialogHandler* cls)
-    : CefCppToC<CefJSDialogHandlerCppToC, CefJSDialogHandler,
-        cef_jsdialog_handler_t>(cls) {
-  struct_.struct_.on_jsdialog = jsdialog_handler_on_jsdialog;
-  struct_.struct_.on_before_unload_dialog =
+CefJSDialogHandlerCppToC::CefJSDialogHandlerCppToC() {
+  GetStruct()->on_jsdialog = jsdialog_handler_on_jsdialog;
+  GetStruct()->on_before_unload_dialog =
       jsdialog_handler_on_before_unload_dialog;
-  struct_.struct_.on_reset_dialog_state =
-      jsdialog_handler_on_reset_dialog_state;
-  struct_.struct_.on_dialog_closed = jsdialog_handler_on_dialog_closed;
+  GetStruct()->on_reset_dialog_state = jsdialog_handler_on_reset_dialog_state;
+  GetStruct()->on_dialog_closed = jsdialog_handler_on_dialog_closed;
+}
+
+template<> CefRefPtr<CefJSDialogHandler> CefCppToC<CefJSDialogHandlerCppToC,
+    CefJSDialogHandler, cef_jsdialog_handler_t>::UnwrapDerived(
+    CefWrapperType type, cef_jsdialog_handler_t* s) {
+  NOTREACHED() << "Unexpected class type: " << type;
+  return NULL;
 }
 
 #ifndef NDEBUG
-template<> long CefCppToC<CefJSDialogHandlerCppToC, CefJSDialogHandler,
-    cef_jsdialog_handler_t>::DebugObjCt = 0;
+template<> base::AtomicRefCount CefCppToC<CefJSDialogHandlerCppToC,
+    CefJSDialogHandler, cef_jsdialog_handler_t>::DebugObjCt = 0;
 #endif
 
+template<> CefWrapperType CefCppToC<CefJSDialogHandlerCppToC,
+    CefJSDialogHandler, cef_jsdialog_handler_t>::kWrapperType =
+    WT_JSDIALOG_HANDLER;

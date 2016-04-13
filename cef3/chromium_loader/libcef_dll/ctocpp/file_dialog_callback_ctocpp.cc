@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2016 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -16,12 +16,19 @@
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-void CefFileDialogCallbackCToCpp::Continue(
+void CefFileDialogCallbackCToCpp::Continue(int selected_accept_filter,
     const std::vector<CefString>& file_paths) {
-  if (CEF_MEMBER_MISSING(struct_, cont))
+  cef_file_dialog_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, cont))
     return;
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: selected_accept_filter; type: simple_byval
+  DCHECK_GE(selected_accept_filter, 0);
+  if (selected_accept_filter < 0)
+    return;
+  // Unverified params: file_paths
 
   // Translate param: file_paths; type: string_vec_byref_const
   cef_string_list_t file_pathsList = cef_string_list_alloc();
@@ -30,7 +37,8 @@ void CefFileDialogCallbackCToCpp::Continue(
     transfer_string_list_contents(file_paths, file_pathsList);
 
   // Execute
-  struct_->cont(struct_,
+  _struct->cont(_struct,
+      selected_accept_filter,
       file_pathsList);
 
   // Restore param:file_paths; type: string_vec_byref_const
@@ -39,18 +47,34 @@ void CefFileDialogCallbackCToCpp::Continue(
 }
 
 void CefFileDialogCallbackCToCpp::Cancel() {
-  if (CEF_MEMBER_MISSING(struct_, cancel))
+  cef_file_dialog_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, cancel))
     return;
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  struct_->cancel(struct_);
+  _struct->cancel(_struct);
 }
 
 
+// CONSTRUCTOR - Do not edit by hand.
+
+CefFileDialogCallbackCToCpp::CefFileDialogCallbackCToCpp() {
+}
+
+template<> cef_file_dialog_callback_t* CefCToCpp<CefFileDialogCallbackCToCpp,
+    CefFileDialogCallback, cef_file_dialog_callback_t>::UnwrapDerived(
+    CefWrapperType type, CefFileDialogCallback* c) {
+  NOTREACHED() << "Unexpected class type: " << type;
+  return NULL;
+}
+
 #ifndef NDEBUG
-template<> long CefCToCpp<CefFileDialogCallbackCToCpp, CefFileDialogCallback,
-    cef_file_dialog_callback_t>::DebugObjCt = 0;
+template<> base::AtomicRefCount CefCToCpp<CefFileDialogCallbackCToCpp,
+    CefFileDialogCallback, cef_file_dialog_callback_t>::DebugObjCt = 0;
 #endif
 
+template<> CefWrapperType CefCToCpp<CefFileDialogCallbackCToCpp,
+    CefFileDialogCallback, cef_file_dialog_callback_t>::kWrapperType =
+    WT_FILE_DIALOG_CALLBACK;

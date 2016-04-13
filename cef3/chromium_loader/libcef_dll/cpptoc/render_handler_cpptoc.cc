@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2016 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -12,7 +12,10 @@
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
+#include "libcef_dll/ctocpp/drag_data_ctocpp.h"
 
+
+namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
@@ -232,7 +235,8 @@ void CEF_CALLBACK render_handler_on_paint(struct _cef_render_handler_t* self,
   std::vector<CefRect > dirtyRectsList;
   if (dirtyRectsCount > 0) {
     for (size_t i = 0; i < dirtyRectsCount; ++i) {
-      dirtyRectsList.push_back(dirtyRects[i]);
+      CefRect dirtyRectsVal = dirtyRects[i];
+      dirtyRectsList.push_back(dirtyRectsVal);
     }
   }
 
@@ -248,7 +252,68 @@ void CEF_CALLBACK render_handler_on_paint(struct _cef_render_handler_t* self,
 
 void CEF_CALLBACK render_handler_on_cursor_change(
     struct _cef_render_handler_t* self, cef_browser_t* browser,
-    cef_cursor_handle_t cursor) {
+    cef_cursor_handle_t cursor, cef_cursor_type_t type,
+    const struct _cef_cursor_info_t* custom_cursor_info) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: custom_cursor_info; type: struct_byref_const
+  DCHECK(custom_cursor_info);
+  if (!custom_cursor_info)
+    return;
+
+  // Translate param: custom_cursor_info; type: struct_byref_const
+  CefCursorInfo custom_cursor_infoObj;
+  if (custom_cursor_info)
+    custom_cursor_infoObj.Set(*custom_cursor_info, false);
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnCursorChange(
+      CefBrowserCToCpp::Wrap(browser),
+      cursor,
+      type,
+      custom_cursor_infoObj);
+}
+
+int CEF_CALLBACK render_handler_start_dragging(
+    struct _cef_render_handler_t* self, cef_browser_t* browser,
+    cef_drag_data_t* drag_data, cef_drag_operations_mask_t allowed_ops, int x,
+    int y) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return 0;
+  // Verify param: drag_data; type: refptr_diff
+  DCHECK(drag_data);
+  if (!drag_data)
+    return 0;
+
+  // Execute
+  bool _retval = CefRenderHandlerCppToC::Get(self)->StartDragging(
+      CefBrowserCToCpp::Wrap(browser),
+      CefDragDataCToCpp::Wrap(drag_data),
+      allowed_ops,
+      x,
+      y);
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK render_handler_update_drag_cursor(
+    struct _cef_render_handler_t* self, cef_browser_t* browser,
+    cef_drag_operations_mask_t operation) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -260,13 +325,14 @@ void CEF_CALLBACK render_handler_on_cursor_change(
     return;
 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->OnCursorChange(
+  CefRenderHandlerCppToC::Get(self)->UpdateDragCursor(
       CefBrowserCToCpp::Wrap(browser),
-      cursor);
+      operation);
 }
 
 void CEF_CALLBACK render_handler_on_scroll_offset_changed(
-    struct _cef_render_handler_t* self, cef_browser_t* browser) {
+    struct _cef_render_handler_t* self, cef_browser_t* browser, double x,
+    double y) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -279,29 +345,42 @@ void CEF_CALLBACK render_handler_on_scroll_offset_changed(
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnScrollOffsetChanged(
-      CefBrowserCToCpp::Wrap(browser));
+      CefBrowserCToCpp::Wrap(browser),
+      x,
+      y);
 }
+
+}  // namespace
 
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefRenderHandlerCppToC::CefRenderHandlerCppToC(CefRenderHandler* cls)
-    : CefCppToC<CefRenderHandlerCppToC, CefRenderHandler, cef_render_handler_t>(
-        cls) {
-  struct_.struct_.get_root_screen_rect = render_handler_get_root_screen_rect;
-  struct_.struct_.get_view_rect = render_handler_get_view_rect;
-  struct_.struct_.get_screen_point = render_handler_get_screen_point;
-  struct_.struct_.get_screen_info = render_handler_get_screen_info;
-  struct_.struct_.on_popup_show = render_handler_on_popup_show;
-  struct_.struct_.on_popup_size = render_handler_on_popup_size;
-  struct_.struct_.on_paint = render_handler_on_paint;
-  struct_.struct_.on_cursor_change = render_handler_on_cursor_change;
-  struct_.struct_.on_scroll_offset_changed =
+CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
+  GetStruct()->get_root_screen_rect = render_handler_get_root_screen_rect;
+  GetStruct()->get_view_rect = render_handler_get_view_rect;
+  GetStruct()->get_screen_point = render_handler_get_screen_point;
+  GetStruct()->get_screen_info = render_handler_get_screen_info;
+  GetStruct()->on_popup_show = render_handler_on_popup_show;
+  GetStruct()->on_popup_size = render_handler_on_popup_size;
+  GetStruct()->on_paint = render_handler_on_paint;
+  GetStruct()->on_cursor_change = render_handler_on_cursor_change;
+  GetStruct()->start_dragging = render_handler_start_dragging;
+  GetStruct()->update_drag_cursor = render_handler_update_drag_cursor;
+  GetStruct()->on_scroll_offset_changed =
       render_handler_on_scroll_offset_changed;
 }
 
+template<> CefRefPtr<CefRenderHandler> CefCppToC<CefRenderHandlerCppToC,
+    CefRenderHandler, cef_render_handler_t>::UnwrapDerived(CefWrapperType type,
+    cef_render_handler_t* s) {
+  NOTREACHED() << "Unexpected class type: " << type;
+  return NULL;
+}
+
 #ifndef NDEBUG
-template<> long CefCppToC<CefRenderHandlerCppToC, CefRenderHandler,
-    cef_render_handler_t>::DebugObjCt = 0;
+template<> base::AtomicRefCount CefCppToC<CefRenderHandlerCppToC,
+    CefRenderHandler, cef_render_handler_t>::DebugObjCt = 0;
 #endif
 
+template<> CefWrapperType CefCppToC<CefRenderHandlerCppToC, CefRenderHandler,
+    cef_render_handler_t>::kWrapperType = WT_RENDER_HANDLER;

@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2016 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -28,10 +28,8 @@ class CefKeyboardHandlerCppToC
     : public CefCppToC<CefKeyboardHandlerCppToC, CefKeyboardHandler,
         cef_keyboard_handler_t> {
  public:
-  explicit CefKeyboardHandlerCppToC(CefKeyboardHandler* cls);
-  virtual ~CefKeyboardHandlerCppToC() {}
+  CefKeyboardHandlerCppToC();
 };
 
 #endif  // USING_CEF_SHARED
 #endif  // CEF_LIBCEF_DLL_CPPTOC_KEYBOARD_HANDLER_CPPTOC_H_
-

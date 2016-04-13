@@ -1,6 +1,4 @@
-// Copyright (c) 2012 Jingyi Wei.
-// Portions Copyright (c) 2011 Marshall A. Greenblatt.
-// All rights reserved.
+// Copyright (c) 2012 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -46,6 +44,7 @@
 #include "include/cef_display_handler.h"
 #include "include/cef_download_handler.h"
 #include "include/cef_drag_handler.h"
+#include "include/cef_find_handler.h"
 #include "include/cef_focus_handler.h"
 #include "include/cef_geolocation_handler.h"
 #include "include/cef_jsdialog_handler.h"
@@ -55,8 +54,6 @@
 #include "include/cef_process_message.h"
 #include "include/cef_render_handler.h"
 #include "include/cef_request_handler.h"
-
-#include "chromium_loader/chromium_settings.h"
 
 ///
 // Implement this interface to provide handler implementations.
@@ -104,6 +101,14 @@ class CefClient : public virtual CefBase {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefDragHandler> GetDragHandler() {
+    return NULL;
+  }
+
+  ///
+  // Return the handler for find result events.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefFindHandler> GetFindHandler() {
     return NULL;
   }
 
@@ -184,13 +189,6 @@ class CefClient : public virtual CefBase {
                                         CefRefPtr<CefProcessMessage> message) {
     return false;
   }
-
-  int id;
-  ChromiumSettings csettings;
-
-#if defined(OS_LINUX)
-  GtkWidget* vbox;
-#endif
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_
