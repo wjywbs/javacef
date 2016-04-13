@@ -105,7 +105,7 @@ client::MainMessageLoopStd* message_loop = NULL;
   NSString* original = [self _swizzled_pathForResource:name ofType:extension];
   if (original)
     return original;
-  
+
   // Load resources from resources_dir_path.
   std::string ext = ".";
   ext = extension ? ext + [extension UTF8String] : "";
