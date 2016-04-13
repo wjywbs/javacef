@@ -49,19 +49,8 @@ if [ "$PLATFORM" == "mac64" ]; then
 fi
 
 if [ "$PLATFORM" == "mac32" ]; then
-  checkJavaHomeMac
-  checkCefPrebuiltMac
-  checkJavaRuntime32Mac
-  checkJarExist
-
-  export DYLD_LIBRARY_PATH="$APP_PATH/Contents/Frameworks/Chromium Embedded Framework.framework"
-  export JAVACEF_PATH="$PROJECT_DIR"
-
-  "$JAVA_HOME$JAVA_BIN" -d32 -XstartOnFirstThread \
-      -cp "$PROJECT_DIR/java/lib/mac/swt32.jar:$BUILD_DIR/$JAR_NAME" \
-      -Djava.library.path="$BUILD_DIR:$DYLD_LIBRARY_PATH" \
-      -Duser.dir="$PROJECT_DIR/java" \
-      org.embedded.browser.SampleBrowserSWT
+  echo "mac32 is no longer supported in cef 2526. Try 3.1750 branch instead."
+  exit 1
 fi
 
 if [ "$PLATFORM" == "linux64" ]; then

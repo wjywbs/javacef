@@ -26,7 +26,6 @@
       'sources': [
         '<@(includes_common)',
         '<@(includes_wrapper)',
-        '<@(cefclient_sources_common)',
         '<@(chromium_loader_sources_common)',
       ],
       'xcode_settings': {
@@ -35,6 +34,7 @@
           '-Wno-unused-function',
           '-Wno-unused-variable',
           '-Wno-newline-eof',
+          '-Wno-deprecated-declarations',
         ],
       },
       'conditions': [

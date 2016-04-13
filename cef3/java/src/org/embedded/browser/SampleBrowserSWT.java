@@ -37,7 +37,7 @@ public class SampleBrowserSWT {
 			public void mouseUp(MouseEvent e) {
 				ChromeWindow.loadUrl("example.com");
 				ChromeWindow.loadUrl("http://127.0.0.1:7000", new ChromeSettings().tabname("javacef", true).right_button(false, true));
-				ChromeWindow.loadUrl("http://www.murl.mobi/headers.php",
+				ChromeWindow.loadUrl("http://whatheaders.com/",
 						new ChromeSettings().cookie("test", "test").cookie("PREF=ID=1:TM=2:LM=3:S=4; NID=5=6"));
 			}
         });

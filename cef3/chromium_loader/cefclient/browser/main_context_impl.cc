@@ -44,6 +44,7 @@ MainContextImpl::~MainContextImpl() {
   DCHECK(!initialized_ || shutdown_);
 }
 
+// static
 std::string MainContextImpl::GetConsoleLogPath() {
   return GetAppWorkingDirectory() + "console.log";
 }

@@ -16,10 +16,12 @@
 #include "include/cef_parser.h"
 #include "include/wrapper/cef_closure_task.h"
 #include "cefclient/browser/main_context.h"
+#include "cefclient/browser/main_context_impl.h"
 #include "cefclient/browser/resource_util.h"
 #include "cefclient/browser/root_window_manager.h"
 #include "cefclient/browser/test_runner.h"
 #include "cefclient/common/client_switches.h"
+#include "chromium_loader/jni_tools.h"
 
 namespace client {
 
@@ -138,7 +140,7 @@ ClientHandler::ClientHandler(Delegate* delegate,
     startup_url_(startup_url),
     delegate_(delegate),
     browser_count_(0),
-    console_log_file_(MainContext::Get()->GetConsoleLogPath()),
+    console_log_file_(MainContextImpl::GetConsoleLogPath()),
     first_console_message_(true),
     focus_on_editable_field_(false) {
   DCHECK(!console_log_file_.empty());
@@ -149,7 +151,7 @@ ClientHandler::ClientHandler(Delegate* delegate,
 #endif
 
   resource_manager_ = new CefResourceManager();
-  test_runner::SetupResourceManager(resource_manager_);
+  //test_runner::SetupResourceManager(resource_manager_);
 
   // Read command line settings.
   CefRefPtr<CefCommandLine> command_line =
@@ -254,6 +256,9 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
                                   const CefString& title) {
   CEF_REQUIRE_UI_THREAD();
 
+  // Send title to java side if the browser is not closed.
+  if (id != -1)
+    set_title(std::string(title).c_str(), id);
   NotifyTitle(title);
 }
 
@@ -269,7 +274,7 @@ bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
                                      const CefString& source,
                                      int line) {
   CEF_REQUIRE_UI_THREAD();
-
+/*
   FILE* file = fopen(console_log_file_.c_str(), "a");
   if (file) {
     std::stringstream ss;
@@ -286,7 +291,7 @@ bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
       first_console_message_ = false;
     }
   }
-
+*/
   return false;
 }
 
@@ -298,7 +303,7 @@ void ClientHandler::OnBeforeDownload(
   CEF_REQUIRE_UI_THREAD();
 
   // Continue the download and show the "Save As" dialog.
-  callback->Continue(MainContext::Get()->GetDownloadPath(suggested_name), true);
+  callback->Continue(MainContextImpl::GetDownloadPath(suggested_name), true);
 }
 
 void ClientHandler::OnDownloadUpdated(
@@ -319,11 +324,6 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefDragData> dragData,
                                 CefDragHandler::DragOperationsMask mask) {
   CEF_REQUIRE_UI_THREAD();
-
-  // Forbid dragging of link URLs.
-  if (mask & DRAG_OPERATION_LINK)
-    return true;
-
   return false;
 }
 
@@ -352,18 +352,6 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
                                   CefEventHandle os_event,
                                   bool* is_keyboard_shortcut) {
   CEF_REQUIRE_UI_THREAD();
-
-  if (!event.focus_on_editable_field && event.windows_key_code == 0x20) {
-    // Special handling for the space character when an input element does not
-    // have focus. Handling the event in OnPreKeyEvent() keeps the event from
-    // being processed in the renderer. If we instead handled the event in the
-    // OnKeyEvent() method the space key would cause the window to scroll in
-    // addition to showing the alert box.
-    if (event.type == KEYEVENT_RAWKEYDOWN)
-      test_runner::Alert(browser, "You pressed the space bar!");
-    return true;
-  }
-
   return false;
 }
 
@@ -397,7 +385,7 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     message_router_ = CefMessageRouterBrowserSide::Create(config);
 
     // Register handlers with the router.
-    test_runner::CreateMessageHandlers(message_handler_set_);
+    //test_runner::CreateMessageHandlers(message_handler_set_);
     MessageHandlerSet::const_iterator it = message_handler_set_.begin();
     for (; it != message_handler_set_.end(); ++it)
       message_router_->AddHandler(*(it), false);
@@ -407,17 +395,34 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   if (mouse_cursor_change_disabled_)
     browser->GetHost()->SetMouseCursorChangeDisabled(true);
 
+  base::AutoLock lock_scope(lock_);
+  if (!browser_.get()) {
+    // We need to keep the main child window, but not popup windows
+    browser_ = browser;
+  }
+
   NotifyBrowserCreated(browser);
 }
 
 bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
 
+  // Close the popup window.
+  if (browser->IsPopup())
+    return false;
+
+  // Do NOT close the browser.
+  // For windows, PlatformCloseWindow in browser_host_impl_win.cc sends
+  // WM_CLOSE to the root window, causing all tabs attempt to close.
+  return true;
+
+/*
   NotifyBrowserClosing(browser);
 
   // Allow the close. For windowed browsers this will result in the OS close
   // event being sent.
   return false;
+*/
 }
 
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
@@ -436,6 +441,12 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
 
   NotifyBrowserClosed(browser);
+
+  if (browser_->GetIdentifier() == browser->GetIdentifier()) {
+    // Free the browser pointer so that the browser can be destroyed.
+    // (Originally the browser was destroyed by BrowserWindow.)
+    browser_ = NULL;
+  }
 }
 
 void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
@@ -444,7 +455,30 @@ void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
                                          bool canGoForward) {
   CEF_REQUIRE_UI_THREAD();
 
+  if (id != -1) {
+    send_load(id, isLoading);
+    send_navstate(id, canGoBack, canGoForward);
+  }
   NotifyLoadingState(isLoading, canGoBack, canGoForward);
+}
+
+void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefFrame> frame) {
+  CEF_REQUIRE_UI_THREAD();
+}
+
+void ClientHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                              CefRefPtr<CefFrame> frame,
+                              int httpStatusCode) {
+  CEF_REQUIRE_UI_THREAD();
+
+  if (browser_->GetIdentifier() == browser->GetIdentifier() && frame->IsMain()) {
+    // Disable the right mouse button if it's set in settings.
+    if (!csettings.allow_right_button)
+      frame->ExecuteJavaScript(
+          "document.body.oncontextmenu=function(){return false;};",
+          frame->GetURL(), 0);
+  }
 }
 
 void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
@@ -486,6 +520,7 @@ bool ClientHandler::OnOpenURLFromTab(
     const CefString& target_url,
     CefRequestHandler::WindowOpenDisposition target_disposition,
     bool user_gesture) {
+/*
   if (target_disposition == WOD_NEW_BACKGROUND_TAB ||
       target_disposition == WOD_NEW_FOREGROUND_TAB) {
     // Handle middle-click and ctrl + left-click by opening the URL in a new
@@ -494,7 +529,7 @@ bool ClientHandler::OnOpenURLFromTab(
         true, is_osr(), CefRect(), target_url);
     return true;
   }
-
+*/
   // Open the URL in the current browser window.
   return false;
 }
@@ -506,8 +541,23 @@ cef_return_value_t ClientHandler::OnBeforeResourceLoad(
       CefRefPtr<CefRequestCallback> callback) {
   CEF_REQUIRE_IO_THREAD();
 
-  return resource_manager_->OnBeforeResourceLoad(browser, frame, request,
-                                                 callback);
+  if (csettings.cookies.size() == 0)
+    return RV_CONTINUE;
+
+  CefRefPtr<CefCookieManager> cookieManager =
+      CefCookieManager::GetGlobalManager(NULL);
+
+  std::map<std::string, std::string>::iterator cookie_it;
+  for (cookie_it = csettings.cookies.begin();
+       cookie_it != csettings.cookies.end();
+       ++cookie_it) {
+    CefCookie cookie;
+    CefString(&cookie.name).FromString(cookie_it->first);
+    CefString(&cookie.value).FromString(cookie_it->second);
+    cookieManager->SetCookie(request->GetURL(), cookie, NULL);
+  }
+
+  return RV_CONTINUE;
 }
 
 CefRefPtr<CefResourceHandler> ClientHandler::GetResourceHandler(
@@ -516,7 +566,7 @@ CefRefPtr<CefResourceHandler> ClientHandler::GetResourceHandler(
     CefRefPtr<CefRequest> request) {
   CEF_REQUIRE_IO_THREAD();
 
-  return resource_manager_->GetResourceHandler(browser, frame, request);
+  return NULL;
 }
 
 CefRefPtr<CefResponseFilter> ClientHandler::GetResourceResponseFilter(
@@ -526,8 +576,7 @@ CefRefPtr<CefResponseFilter> ClientHandler::GetResourceResponseFilter(
     CefRefPtr<CefResponse> response) {
   CEF_REQUIRE_IO_THREAD();
 
-  return test_runner::GetResourceResponseFilter(browser, frame, request,
-                                                response);
+  return NULL;
 }
 
 bool ClientHandler::OnQuotaRequest(CefRefPtr<CefBrowser> browser,
@@ -678,10 +727,11 @@ bool ClientHandler::CreatePopupWindow(
 
   // The popup browser will be parented to a new native window.
   // Don't show URL bar and navigation buttons on DevTools windows.
-  MainContext::Get()->GetRootWindowManager()->CreateRootWindowAsPopup(
-      !is_devtools, is_osr(), popupFeatures, windowInfo, client, settings);
+  //MainContext::Get()->GetRootWindowManager()->CreateRootWindowAsPopup(
+  //    !is_devtools, is_osr(), popupFeatures, windowInfo, client, settings);
 
-  return true;
+  // TODO: Fix creating popup windows.
+  return false;
 }
 
 

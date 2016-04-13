@@ -156,6 +156,8 @@
       'cefclient/browser/client_handler_std.cc',
       'cefclient/browser/client_handler_std.h',
       'cefclient/browser/client_types.h',
+      'cefclient/browser/cookie_handler.cc',
+      'cefclient/browser/cookie_handler.h',
       'cefclient/browser/dialog_test.cc',
       'cefclient/browser/dialog_test.h',
       'cefclient/browser/geometry_util.cc',
@@ -346,6 +348,29 @@
     'cefsimple_sources_linux': [
       'cefsimple/cefsimple_linux.cc',
       'cefsimple/simple_handler_linux.cc',
+    ],
+    'chromium_loader_sources_common': [
+      'chromium_loader/browser_creator.cpp',
+      'chromium_loader/browser_creator.h',
+      'chromium_loader/chromium_settings.h',
+      'chromium_loader/jni_tools.cpp',
+      'chromium_loader/jni_tools.h',
+    ],
+    'chromium_loader_sources_win': [
+      'chromium_loader/chromium_loader_win.cpp',
+      'chromium_loader/chromium_loader_win.rc',
+      'chromium_loader/resource.h',
+      'chromium_loader/targetver.h',
+    ],
+    'chromium_loader_sources_mac': [
+      'chromium_loader/chromium_loader_mac.mm',
+      'chromium_loader/signal_restore_posix.cpp',
+      'chromium_loader/signal_restore_posix.h',
+    ],
+    'chromium_loader_sources_linux': [
+      'chromium_loader/chromium_loader_linux.cpp',
+      'chromium_loader/signal_restore_posix.cpp',
+      'chromium_loader/signal_restore_posix.h',
     ],
   },
 }

@@ -21,10 +21,16 @@ class MainContextImpl : public MainContext {
   MainContextImpl(CefRefPtr<CefCommandLine> command_line,
                   bool terminate_when_all_windows_closed);
 
+  // Returns the full path to the console log file.
+  static std::string GetConsoleLogPath();
+
+  // Returns the full path to |file_name|.
+  static std::string GetDownloadPath(const std::string& file_name);
+
+  // Returns the app working directory including trailing path separator.
+  static std::string GetAppWorkingDirectory();
+
   // MainContext members.
-  std::string GetConsoleLogPath() OVERRIDE;
-  std::string GetDownloadPath(const std::string& file_name) OVERRIDE;
-  std::string GetAppWorkingDirectory() OVERRIDE;
   std::string GetMainURL() OVERRIDE;
   cef_color_t GetBackgroundColor() OVERRIDE;
   void PopulateSettings(CefSettings* settings) OVERRIDE;

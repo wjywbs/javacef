@@ -52,6 +52,11 @@ void ClientAppBrowser::OnBeforeCommandLineProcessing(
     for (; it != delegates_.end(); ++it)
       (*it)->OnBeforeCommandLineProcessing(this, command_line);
   }
+
+#if defined(OS_MACOSX)
+  // TODO: Find out the cause of blank screen when GPU compositing is enabled.
+  command_line->AppendSwitch("disable-gpu-compositing");
+#endif
 }
 
 void ClientAppBrowser::OnContextInitialized() {

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-  echo "Usage: ./configure.sh mac64|mac32|linux64|linux32"
+  echo "Usage: ./configure.sh mac64|linux64|linux32"
   exit 1
 fi
 
@@ -31,20 +31,12 @@ if [ "$PLATFORM" == "mac64" ]; then
 
   "$TOOL_DIR/gyp_chromium" --toplevel-dir="$PROJECT_DIR" --depth="$TOOL_DIR" \
       -Djava_include_path="$JAVA_INCLUDE_PATH" -Dcef_prebuilt_path="$APP_PATH" \
-      "$PROJECT_DIR/javacef.gyp"
+      -Dmac_deployment_target=10.7 -Dmac_sdk_min=10.10 "$PROJECT_DIR/javacef.gyp"
 fi
 
 if [ "$PLATFORM" == "mac32" ]; then
-  checkJavaHomeMac 32
-  checkJavaRuntime32Mac
-  checkJavaIncludeMac 32
-  checkCefPrebuiltMac
-  printGYPGenerator
-
-  "$TOOL_DIR/gyp_chromium" --toplevel-dir="$PROJECT_DIR" --depth="$TOOL_DIR" \
-      -Djava_include_path="$JAVA_INCLUDE_PATH" -Dcef_prebuilt_path="$APP_PATH" \
-      -Dtarget_arch=ia32 \
-      "$PROJECT_DIR/javacef.gyp"
+  echo "mac32 is no longer supported in cef 2526. Try 3.1750 branch instead."
+  exit 1
 fi
 
 if [ "$PLATFORM" == "linux64" ]; then

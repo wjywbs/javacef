@@ -16,18 +16,22 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
-#include "cefclient/cefclient.h"
-#include "cefclient/client_handler.h"
-#include "cefclient/client_switches.h"
-#include "cefclient/cookie_handler.h"
+#include "cefclient/browser/client_app_browser.h"
+#include "cefclient/browser/client_handler.h"
+#include "cefclient/browser/cookie_handler.h"
+#include "cefclient/browser/main_message_loop_std.h"
+#include "cefclient/common/client_switches.h"
+#include "chromium_loader/browser_creator.h"
 #include "chromium_loader/signal_restore_posix.h"
+
+using ClientHandler = client::ClientHandler;
 
 namespace {
 
-char* szWorkingDir;  // The current working directory
-bool message_loop = false;
+bool use_message_loop = false;
 bool handling_send_event = false;
-CefWindowHandle mainBrowserHandle = NULL;
+CefString resources_dir_path;
+client::MainMessageLoopStd* message_loop = NULL;
 
 } // namespace
 
@@ -70,6 +74,69 @@ CefWindowHandle mainBrowserHandle = NULL;
 
 @end
 
+@interface NSBundle (JavaCefBundle)
+
+- (NSString *)_swizzled_pathForResource:(NSString *)name
+                                 ofType:(NSString *)extension;
+
+- (NSString *)_swizzled_pathForResource:(NSString *)name
+                                 ofType:(NSString *)extension
+                            inDirectory:(NSString *)subpath
+                        forLocalization:(NSString *)localizationName;
+
+@end
+
+@implementation NSBundle (JavaCefBundle)
+
++ (void)load {
+  // Swap NSApplication::pathForResource with _swizzled_pathForResource.
+  Method original = class_getInstanceMethod(self, @selector(pathForResource:ofType:));
+  Method swizzled = class_getInstanceMethod(self, @selector(_swizzled_pathForResource:ofType:));
+  method_exchangeImplementations(original, swizzled);
+
+  original = class_getInstanceMethod(self, @selector(pathForResource:ofType:inDirectory:forLocalization:));
+  swizzled = class_getInstanceMethod(self, @selector(_swizzled_pathForResource:ofType:inDirectory:forLocalization:));
+  method_exchangeImplementations(original, swizzled);
+}
+
+- (NSString *)_swizzled_pathForResource:(NSString *)name
+                                 ofType:(NSString *)extension {
+  // Try to use the original resolver.
+  NSString* original = [self _swizzled_pathForResource:name ofType:extension];
+  if (original)
+    return original;
+  
+  // Load resources from resources_dir_path.
+  std::string ext = ".";
+  ext = extension ? ext + [extension UTF8String] : "";
+
+  const std::string resources_dir = (const std::string)resources_dir_path;
+  std::string path = resources_dir + "/" + [name UTF8String] + ext;
+  return [NSString stringWithUTF8String:path.c_str()];
+}
+
+- (NSString *)_swizzled_pathForResource:(NSString *)name
+                                 ofType:(NSString *)extension
+                            inDirectory:(NSString *)subpath
+                        forLocalization:(NSString *)localizationName {
+  std::string ext = ".";
+  ext = extension ? ext + [extension UTF8String] : "";
+
+  const std::string resources_dir = (const std::string)resources_dir_path;
+  std::string path = resources_dir + "/" + [localizationName UTF8String] + ".lproj/" + [name UTF8String] + ext;
+  return [NSString stringWithUTF8String:path.c_str()];
+}
+
+@end
+
+void GetBrowserWindowInfo(CefWindowInfo& info, CefWindowHandle handle) {
+  // The size may be (0,0)
+  NSSize size = handle.frame.size;
+
+  // Initialize window info to the defaults for a child window
+  info.SetAsChild(handle, 0, 0, size.width, size.height);
+}
+
 // The linker has -fvisibility=hidden by default, so we need to explictly
 // export the jni functions.
 #undef JNIEXPORT
@@ -78,46 +145,36 @@ CefWindowHandle mainBrowserHandle = NULL;
 JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
   (JNIEnv *env, jobject jobj, jlong hwnd, jstring url, jobject chromiumset)
 {
-  // Make a simple argument.
-  const int argc = 1;
-  char** argv = (char**)malloc(argc * sizeof(*argv));
-  argv[0] = strdup("java");
+  CefMainArgs main_args(0, NULL);
 
-  CefMainArgs main_args(argc, argv);
-  CefRefPtr<ClientApp> app(new ClientApp);
+  CefRefPtr<CefApp> app(new client::ClientAppBrowser);
+  CefSettings settings;
+
+  settings.multi_threaded_message_loop = use_message_loop;
+  settings.log_severity = LOGSEVERITY_DISABLE;
+  //settings.no_sandbox = true;
+  //settings.background_color = CefColorSetARGB(255, 255, 255, 255);
 
   // Retrieve the current working directory.
-  szWorkingDir = getenv("JAVACEF_PATH");
+  char* szWorkingDir = getenv("JAVACEF_PATH");
   if (!szWorkingDir)
     szWorkingDir = (char*)calloc(1, sizeof(char));
 
-  // Parse command line arguments. The passed in values are ignored on Windows.
-  AppInitCommandLine(argc, argv);
-
-  CefSettings settings;
-
-  // Populate the settings based on command line arguments.
-  AppGetSettings(settings);
-
-  settings.multi_threaded_message_loop = message_loop;
-  settings.log_severity = LOGSEVERITY_DISABLE;
-
   CefString path = CefString(szWorkingDir);
-
-#ifndef __LP64__
-  CefString(&settings.browser_subprocess_path) = path.ToString() + "/cef_runtime/mac32/cefclient.app/Contents/Frameworks/cefclient Helper.app/Contents/MacOS/cefclient Helper";
-  CefString(&settings.resources_dir_path) = path.ToString() + "/cef_runtime/mac32/cefclient.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources";
-#else
   CefString(&settings.browser_subprocess_path) = path.ToString() + "/cef_runtime/mac64/cefclient.app/Contents/Frameworks/cefclient Helper.app/Contents/MacOS/cefclient Helper";
 
   // Need to set the path to find devtools resources.
-  CefString(&settings.resources_dir_path) = path.ToString() + "/cef_runtime/mac64/cefclient.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources";
-#endif
+  resources_dir_path = path.ToString() + "/cef_runtime/mac64/cefclient.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources";
+  CefString(&settings.resources_dir_path) = resources_dir_path;
+
+  message_loop = new client::MainMessageLoopStd();
 
   BackupSignalHandlers();
 
-  // Initialize CEF.
-  CefInitialize(main_args, settings, app.get(), NULL);
+  if (!CefInitialize(main_args, settings, app, NULL)) {
+    fprintf(stderr, "Failed to initialize CEF.\n");
+    return;
+  }
 
   RestoreSignalHandlers();
 
@@ -129,7 +186,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
   const char* chr = env->GetStringUTFChars(url, 0);
   CefString wc = chr;
 
-  CefRefPtr<ClientHandler> gh = InitBrowser(view, wc);
+  CefRefPtr<ClientHandler> gh = NewBrowser(view, wc);
   gh->id = 1;
 
   env->ReleaseStringUTFChars(url, chr);
@@ -144,7 +201,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1init
   // Have to be here and use own jnienv to avoid errors.
   get_browser_settings(env, chromiumset, gh->csettings);
 /*
-  if (!message_loop) {
+  if (!use_message_loop) {
     CefRunMessageLoop();
     CefShutdown();
   }
@@ -182,7 +239,7 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1close
   }*/
 
   if (g_handler_local.get() && g_handler_local->GetBrowser()) {
-    g_handler_local->GetBrowser()->GetHost()->CloseBrowser(false);
+    g_handler_local->GetBrowser()->GetHost()->CloseBrowser(true);
     g_handler_local->id = -1;
   }
   //_asm mov g_handler_local, 0;
@@ -195,24 +252,24 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1shutdown
 
   if (g_handler_local.get() && g_handler_local->GetBrowser() &&
       g_handler_local->GetBrowser()->GetHost()->GetWindowHandle()) {
-    g_handler_local->GetBrowser()->GetHost()->ParentWindowWillClose();
-    g_handler_local->GetBrowser()->GetHost()->CloseBrowser(false);
+    g_handler_local->GetBrowser()->GetHost()->CloseBrowser(true);
     g_handler_local->id = -1;
-    mainBrowserHandle = g_handler_local->GetBrowser()->GetHost()->GetWindowHandle();
   }
   cleanup_jvm(env);
   CefShutdown();
+
+  if (message_loop) {
+    delete message_loop;
+    message_loop = NULL;
+  }
 }
 
 JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1clean_1cookies
   (JNIEnv *env, jobject jobj)
 {
-  CefRefPtr<CefCookieManager> cookieManager = CefCookieManager::GetGlobalManager();
+  CefRefPtr<CefCookieManager> cookieManager = CefCookieManager::GetGlobalManager(NULL);
   CefRefPtr<CefCookieVisitor> cookieHandler = new CookieHandler(true);
   cookieManager->VisitAllCookies(cookieHandler);
-  // Doesn't work:
-  //CefString empty("");
-  //cookieManager->DeleteCookies(empty, empty);
 }
 
 JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1setUrl
@@ -242,6 +299,8 @@ JNIEXPORT void JNICALL Java_org_embedded_browser_Chromium_browser_1resized
     if ([subviews count] > 0) {
       NSView* browser_view = [subviews objectAtIndex:0];
       NSRect bound = [view bounds];
+      NSSize size = bound.size;
+      //printf("subviews %lu w %f h %f\n", [subviews count], size.width, size.height);
       [browser_view setFrame:bound];
     }
   }
@@ -301,14 +360,4 @@ JNIEXPORT jlong JNICALL Java_org_embedded_browser_DownloadWindow_getReceivedN
   }
   return rs;*/
   return 0;
-}
-
-// Global functions
-
-std::string AppGetWorkingDirectory() {
-  return szWorkingDir;
-}
-
-void AppQuitMessageLoop() {
-  // do nothing
 }

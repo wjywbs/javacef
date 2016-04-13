@@ -16,6 +16,7 @@
 #include "cefclient/browser/binding_test.h"
 #include "cefclient/browser/dialog_test.h"
 #include "cefclient/browser/main_context.h"
+#include "cefclient/browser/main_context_impl.h"
 #include "cefclient/browser/preferences_test.h"
 #include "cefclient/browser/resource.h"
 #include "cefclient/browser/resource_util.h"
@@ -309,7 +310,7 @@ void EndTracing(CefRefPtr<CefBrowser> browser) {
 
     void RunDialog() {
       static const char kDefaultFileName[] = "trace.txt";
-      std::string path = MainContext::Get()->GetDownloadPath(kDefaultFileName);
+      std::string path = MainContextImpl::GetDownloadPath(kDefaultFileName);
       if (path.empty())
         path = kDefaultFileName;
 
@@ -368,7 +369,7 @@ void PrintToPDF(CefRefPtr<CefBrowser> browser) {
 
     void RunDialog() {
       static const char kDefaultFileName[] = "output.pdf";
-      std::string path = MainContext::Get()->GetDownloadPath(kDefaultFileName);
+      std::string path = MainContextImpl::GetDownloadPath(kDefaultFileName);
       if (path.empty())
         path = kDefaultFileName;
 

@@ -201,6 +201,11 @@ class ClientHandler : public CefClient,
                             bool isLoading,
                             bool canGoBack,
                             bool canGoForward) OVERRIDE;
+  void OnLoadStart(CefRefPtr<CefBrowser> browser,
+                   CefRefPtr<CefFrame> frame) OVERRIDE;
+  void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                 CefRefPtr<CefFrame> frame,
+                 int httpStatusCode) OVERRIDE;
   void OnLoadError(CefRefPtr<CefBrowser> browser,
                    CefRefPtr<CefFrame> frame,
                    ErrorCode errorCode,
@@ -251,6 +256,8 @@ class ClientHandler : public CefClient,
   // Returns the number of browsers currently using this handler. Can only be
   // called on the CEF UI thread.
   int GetBrowserCount() const;
+
+  CefRefPtr<CefBrowser> GetBrowser() { return browser_; }
 
   // Show a new DevTools popup window.
   void ShowDevTools(CefRefPtr<CefBrowser> browser,
@@ -338,6 +345,11 @@ class ClientHandler : public CefClient,
 
   // The current number of browsers using this handler.
   int browser_count_;
+
+  // The child browser window
+  CefRefPtr<CefBrowser> browser_;
+
+  base::Lock lock_;
 
   // Console logging state.
   const std::string console_log_file_;

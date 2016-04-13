@@ -14,7 +14,7 @@
       [ 'OS=="mac"', {
         # Don't use clang with CEF binary releases due to Chromium tree structure dependency.
         'clang': 0,
-        'target_arch%': 'x64',
+        'target_arch': 'x64',
       }],
       ['sysroot!=""', {
         'pkg-config': './pkg-config-wrapper "<(sysroot)" "<(target_arch)"',

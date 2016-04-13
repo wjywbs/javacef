@@ -8,10 +8,12 @@
 
 namespace client {
 
+// static
 std::string MainContextImpl::GetDownloadPath(const std::string& file_name) {
   return std::string();
 }
 
+// static
 std::string MainContextImpl::GetAppWorkingDirectory() {
   char szWorkingDir[256];
   if (getcwd(szWorkingDir, sizeof(szWorkingDir) - 1) == NULL) {
